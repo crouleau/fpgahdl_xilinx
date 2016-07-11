@@ -336,7 +336,7 @@ module axi_ad9361_dev_if (
   // transmit data path mux (reverse of what receive does above)
   // the count simply selets the data muxing on the ddr outputs
 
-  assign tx_data_sel_s = {tx_data_cnt[2], dac_r1_mode, tx_data_cnt[1:0]};
+  assign tx_data_sel_s = {tx_data_cnt[2], dac_r1_mode, tx_data_cnt[1:0]}; //concatenation
 
   always @(posedge clk) begin
     if (dac_valid == 1'b1) begin
@@ -614,7 +614,7 @@ module axi_ad9361_dev_if (
     .R (1'b0),
     .S (1'b0),
     .C (clk),
-    .D1 (tx_data_p[l_inst]),
+    .D1 (tx_data_p[l_inst]), //Is this differential input being translated to single ended?
     .D2 (tx_data_n[l_inst]),
     .Q (tx_data_oddr_s[l_inst]));
 
