@@ -107,22 +107,18 @@ module axi_ad9361_dev_if_tb
         end
     end
 
-    //wire up dac_r1_mode and adc_r1_mode based on the param value
-    always @(*) begin
-        if(ADC_RXTX_1_MODE == 1) begin
-            dac_r1_mode_tb = 1'b1;
-            adc_r1_mode_tb = 1'b1;
-        end else begin
-            dac_r1_mode_tb = 1'b0;
-            adc_r1_mode_tb = 1'b0;
-        end
-    end
-
-
     //Insert data generation here... for now making it static (still have to clock it because of high/low bit transitions)
     initial
         begin: RX_DATA_GEN
             rx_data_in_p_tb = 6'b000000;
+            //wire up dac_r1_mode and adc_r1_mode based on the param value
+            if(ADC_RXTX_1_MODE == 1) begin
+                dac_r1_mode_tb = 1'b1;
+                adc_r1_mode_tb = 1'b1;
+            end else begin
+                dac_r1_mode_tb = 1'b0;
+                adc_r1_mode_tb = 1'b0;
+            end
     forever
         begin
             //in 1rx 1tx mode, the high bits go at the positive edge of the frame (I then Q)
