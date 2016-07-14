@@ -69,10 +69,18 @@ module axi_ad9361_dev_if_tb
 
 
     //Data defines
-    parameter idata1 = 12'o0123;
-    parameter idata2 = 12'o3322;
-    parameter qdata1 = 12'o4567;
-    parameter qdata2 = 12'o7664;
+    //rx - what the AD9364 is supposedly receiving (alternating pattern between 1 and 2)
+    //This goes into "rx_data_in" and we should get it back from our HDL via "adc_data"
+    parameter idata1_rx = 12'o0123;
+    parameter idata2_rx = 12'o3322;
+    parameter qdata1_rx = 12'o4567;
+    parameter qdata2_rx = 12'o7664;
+    //tx - what the "HDL" we're plugged into is supposedly transmitting (alternating again, 1 and 2)
+    //This goes into the "dac_data" and we should get it back from the HDL block in question via "tx_data_out"
+    parameter idata1_tx = 12'o2064;
+    parameter idata2_tx = 12'o4402;
+    parameter qdata1_tx = 12'o1753;
+    parameter qdata2_tx = 12'o1337;
 
     //Not sure how you're supposed to do this, but this seems to work...
     //assign rx_clk_in_p_tb_o = rx_clk_in_p_tb;
@@ -135,41 +143,41 @@ module axi_ad9361_dev_if_tb
                 //Transmit the first I/Q data
                 @(posedge rx_frame_in_p_tb)
                 #1
-                rx_data_in_p_tb = idata1[11:6];
+                rx_data_in_p_tb = idata1_rx[11:6];
                 //Now wait for the negative edge of the clock to put in the Q data
                 @(negedge rx_clk_in_p_tb)
                 #1
-                rx_data_in_p_tb = qdata1[11:6];
+                rx_data_in_p_tb = qdata1_rx[11:6];
 
                 @(negedge rx_frame_in_p_tb) //Not sure if making this sequential is "proper"
                 #1
-                rx_data_in_p_tb = idata1[5:0];
+                rx_data_in_p_tb = idata1_rx[5:0];
 
                 @(negedge rx_clk_in_p_tb)
                 #1
-                rx_data_in_p_tb = qdata1[5:0];
+                rx_data_in_p_tb = qdata1_rx[5:0];
 
                 //now transmit some different data
                 @(posedge rx_frame_in_p_tb)
                 #1
-                rx_data_in_p_tb = idata2[11:6];
+                rx_data_in_p_tb = idata2_rx[11:6];
 
                 @(negedge rx_clk_in_p_tb)
                 #1
-                rx_data_in_p_tb = qdata2[11:6];
+                rx_data_in_p_tb = qdata2_rx[11:6];
 
                 @(negedge rx_frame_in_p_tb)
                 #1
-                rx_data_in_p_tb = idata2[5:0];
+                rx_data_in_p_tb = idata2_rx[5:0];
 
                 @(negedge rx_clk_in_p_tb)
                 #1
-                rx_data_in_p_tb = qdata2[5:0];
+                rx_data_in_p_tb = qdata2_rx[5:0];
 
             //In 2rx 2tx mode, you do all the 11:6, I then Q, then 5:0, I then Q, for channel 1 on the pos edge of the frame
             //and the same for channel 2 but on the negative edge of the frame
             end else begin
-                rx_data_in_p_tb = 6'b110011; //TODO: Implementme! (making everything the same right now)
+                rx_data_in_p_tb = 6'bo7777; //TODO: Implementme! (making everything the same right now)
             end
         end
     end
@@ -191,8 +199,8 @@ module axi_ad9361_dev_if_tb
             if(ADC_RXTX_1_MODE == 1) begin
                 @(posedge clk_tb) //This also serves to clock out the 2nd two frames (I/Q, 5:0)
                 #1
-                dac_data_i1_tb = 12'b101010110110;
-                dac_data_q1_tb = 12'b001001100010;
+                dac_data_i1_tb = idata1_tx;
+                dac_data_q1_tb = qdata1_tx;
                 dac_valid_tb = 1'b1; //This preps the dev_if logic to take in the data
 
                 @(posedge clk_tb) //When this occurs, the gets taken in, and later clocked out on I/Q, 11:6
@@ -201,8 +209,8 @@ module axi_ad9361_dev_if_tb
 
                 @(posedge clk_tb) //This is just here so we can send alternating data packets
                 #1
-                dac_data_i1_tb = 12'b110011001100;
-                dac_data_q1_tb = 12'b101010100001;
+                dac_data_i1_tb = idata2_tx;
+                dac_data_q1_tb = qdata2_tx;
                 dac_valid_tb = 1'b1;
 
                 @(posedge clk_tb)
@@ -211,8 +219,8 @@ module axi_ad9361_dev_if_tb
 
             end else begin
                 //Not implemented atm
-                dac_data_i1_tb = 12'b000000000000;
-                dac_data_q1_tb = 12'b000000000000;
+                dac_data_i1_tb = 12'o0000;
+                dac_data_q1_tb = 12'o0000;
                 dac_valid_tb = 1'b0;
             end
         end
