@@ -10,7 +10,6 @@ module axi_ad9361_dev_if_tb
 
     // this parameter controls the buffer type based on the target device.
     parameter   PCORE_BUFTYPE = 1; //Using Virtex 6!
-    parameter   PCORE_IODELAY_GROUP = "dev_if_delay_group";
     localparam  PCORE_7SERIES = 0;
     localparam  PCORE_VIRTEX6 = 1;
 
@@ -64,22 +63,10 @@ module axi_ad9361_dev_if_tb
     reg   [11:0]  dac_data_q2_tb;
     reg           dac_r1_mode_tb;
 
-    // delay control signals
-
-    reg           delay_clk_tb;
-    reg           delay_rst_tb;
-    reg           delay_sel_tb;
-    reg           delay_rwn_tb;
-    reg   [ 7:0]  delay_addr_tb;
-    reg   [ 4:0]  delay_wdata_tb;
-    wire  [ 4:0]  delay_rdata_tb;
-    wire          delay_ack_t_tb;
-    wire          delay_locked_tb;
-
     // chipscope signals
     wire  [ 3:0]  dev_dbg_trigger_tb;
     wire [297:0]  dev_dbg_data_tb;
-    
+
     //Not sure how you're supposed to do this, but this seems to work...
     //assign rx_clk_in_p_tb_o = rx_clk_in_p_tb;
 
@@ -93,7 +80,7 @@ module axi_ad9361_dev_if_tb
             rx_clk_in_p_tb = ~rx_clk_in_p_tb;
             rx_clk_in_n_tb = ~rx_clk_in_n_tb;
         end
-    end    
+    end
 
     initial
         begin: RX_FRAME_GEN
@@ -122,9 +109,9 @@ module axi_ad9361_dev_if_tb
 
     //wire up dac_r1_mode and adc_r1_mode based on the param value
     always @(*) begin
-        if(ADC_RXTX_1_MODE == 1) begin   
+        if(ADC_RXTX_1_MODE == 1) begin
             dac_r1_mode_tb = 1'b1;
-            adc_r1_mode_tb = 1'b1;        
+            adc_r1_mode_tb = 1'b1;
         end else begin
             dac_r1_mode_tb = 1'b0;
             adc_r1_mode_tb = 1'b0;
@@ -137,7 +124,7 @@ module axi_ad9361_dev_if_tb
         begin: RX_DATA_GEN
             rx_data_in_p_tb = 6'b000000;
     forever
-        begin            
+        begin
             //in 1rx 1tx mode, the high bits go at the positive edge of the frame (I then Q)
             //and low bits do the same at the negative edge of the frame
             if(ADC_RXTX_1_MODE == 1) begin
@@ -208,31 +195,8 @@ module axi_ad9361_dev_if_tb
         end
     end
 
-
-    //Set all the delay registers to 0...
-    always @(*) begin
-        delay_rst_tb <= 1'b0;
-        delay_sel_tb <= 1'b0;
-        delay_rwn_tb <= 1'b0;
-        delay_addr_tb <= 8'b00000000;
-        delay_wdata_tb <= 5'b00000;
-    end
-
-    //Generate the delay clock
-    initial
-        begin: DELAY_CLK_GEN
-        delay_clk_tb = 1;
-    forever
-        begin
-            #5 delay_clk_tb = ~delay_clk_tb; //200 MHz
-        end
-    end
-    
-
-    
     axi_ad9361_dev_if #(
-        .PCORE_BUFTYPE (PCORE_BUFTYPE),
-        .PCORE_IODELAY_GROUP (PCORE_IODELAY_GROUP))
+        .PCORE_BUFTYPE (PCORE_BUFTYPE)
     i_dev_if (
         .rx_clk_in_p (rx_clk_in_p_tb),
         .rx_clk_in_n (rx_clk_in_n_tb),
@@ -260,15 +224,6 @@ module axi_ad9361_dev_if_tb
         .dac_data_i2 (dac_data_i2_tb),
         .dac_data_q2 (dac_data_q2_tb),
         .dac_r1_mode (dac_r1_mode_tb),
-        .delay_clk (delay_clk_tb),
-        .delay_rst (delay_rst_tb),
-        .delay_sel (delay_sel_tb),
-        .delay_rwn (delay_rwn_tb),
-        .delay_addr (delay_addr_tb),
-        .delay_wdata (delay_wdata_tb),
-        .delay_rdata (delay_rdata_tb),
-        .delay_ack_t (delay_ack_t_tb),
-        .delay_locked (delay_locked_tb),
         .dev_dbg_trigger (dev_dbg_trigger_tb),
         .dev_dbg_data (dev_dbg_data_tb)
     );
