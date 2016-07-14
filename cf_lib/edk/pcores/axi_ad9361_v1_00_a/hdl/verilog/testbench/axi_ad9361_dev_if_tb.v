@@ -4,52 +4,8 @@
 
 module axi_ad9361_dev_if_tb
     (
-        // // physical interface (receive)
-        rx_clk_in_p_tb_o
-        // rx_clk_in_n_tb
-        // rx_frame_in_p_tb,
-        // rx_frame_in_n_tb,
-        // rx_data_in_p_tb,
-        // rx_data_in_n_tb,
-
-        // // physical interface (transmit)
-        // tx_clk_out_p_tb,
-        // tx_clk_out_n_tb
-        // tx_frame_out_p_tb,
-        // tx_frame_out_n_tb,
-        // tx_data_out_p_tb,
-        // tx_data_out_n_tb,
-
-        // // clock (common to both receive and transmit)
-        // clk_tb,
-
-        // // receive data path interface
-        // adc_valid_tb,
-        // adc_data_i1_tb,
-        // adc_data_q1_tb,
-        // adc_data_i2_tb,
-        // adc_data_q2_tb,
-        // adc_status_tb,
-        // adc_r1_mode_tb,
-
-        // // transmit data path interface
-        // dac_valid_tb,
-        // dac_data_i1_tb,
-        // dac_data_q1_tb,
-        // dac_data_i2_tb,
-        // dac_data_q2_tb,
-        // dac_r1_mode_tb,
-
-        // // delay control signals
-        // delay_clk_tb,
-        // delay_rst_tb,
-        // delay_sel_tb,
-        // delay_rwn_tb,
-        // delay_addr_tb,
-        // delay_wdata_tb,
-        // delay_rdata_tb,
-        // delay_ack_t_tb,
-        // delay_locked_tb
+        //No physical interface
+        //Use "-novopt" in modelsim to ensure signal visibility
     );
 
     // this parameter controls the buffer type based on the target device.
@@ -71,8 +27,6 @@ module axi_ad9361_dev_if_tb
     // see ad9361_calculate_rf_clock_chain
     reg           rx_clk_in_p_tb; //simulate DATA_CLK_P in fmcomms4
     reg           rx_clk_in_n_tb; //Need to simulate DATA_CLK_N in fmcomms4
-    output        rx_clk_in_p_tb_o;
-    //output        rx_clk_in_n_tb_o;
     reg           rx_frame_in_p_tb; //This comes from the AD9364 ("RX_FRAME_P")
     reg           rx_frame_in_n_tb;
     reg   [ 5:0]  rx_data_in_p_tb;
@@ -127,7 +81,7 @@ module axi_ad9361_dev_if_tb
     wire [297:0]  dev_dbg_data_tb;
     
     //Not sure how you're supposed to do this, but this seems to work...
-    assign rx_clk_in_p_tb_o = rx_clk_in_p_tb;
+    //assign rx_clk_in_p_tb_o = rx_clk_in_p_tb;
 
     initial
         begin: CLK_GEN
@@ -170,10 +124,10 @@ module axi_ad9361_dev_if_tb
     always @(*) begin
         if(ADC_RXTX_1_MODE == 1) begin   
             dac_r1_mode_tb = 1'b1;
-            dac_r1_mode_tb = 1'b1;        
+            adc_r1_mode_tb = 1'b1;        
         end else begin
             dac_r1_mode_tb = 1'b0;
-            dac_r1_mode_tb = 1'b0;
+            adc_r1_mode_tb = 1'b0;
         end
     end
 
@@ -181,10 +135,9 @@ module axi_ad9361_dev_if_tb
     //Insert data generation here... for now making it static (still have to clock it because of high/low bit transitions)
     initial
         begin: RX_DATA_GEN
-            rx_data_in_p_tb = 5'b00000;
+            rx_data_in_p_tb = 6'b000000;
     forever
-        begin
-            rx_data_in_n_tb <= ~rx_data_in_p_tb;
+        begin            
             //in 1rx 1tx mode, the high bits go at the positive edge of the frame (I then Q)
             //and low bits do the same at the negative edge of the frame
             if(ADC_RXTX_1_MODE == 1) begin
@@ -206,11 +159,14 @@ module axi_ad9361_dev_if_tb
             //In 2rx 2tx mode, you do all the 11:6, I then Q, then 5:0, I then Q, for channel 1 on the pos edge of the frame
             //and the same for channel 2 but on the negative edge of the frame
             end else begin
-                rx_data_in_p_tb = 5'b110011; //TODO: Implementme! (making everything the same right now)
+                rx_data_in_p_tb = 6'b110011; //TODO: Implementme! (making everything the same right now)
             end
         end
     end
 
+    always @(*) begin
+        rx_data_in_n_tb <= ~rx_data_in_p_tb;
+    end
     //Implement DAC interface
     initial
         begin: TX_DATA_GEN
