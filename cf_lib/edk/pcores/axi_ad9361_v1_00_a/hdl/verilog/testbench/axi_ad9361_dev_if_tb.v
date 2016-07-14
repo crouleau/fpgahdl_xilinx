@@ -67,6 +67,13 @@ module axi_ad9361_dev_if_tb
     wire  [ 3:0]  dev_dbg_trigger_tb;
     wire [297:0]  dev_dbg_data_tb;
 
+
+    //Data defines
+    parameter idata1 = 12'o0123;
+    parameter idata2 = 12'o3322;
+    parameter qdata1 = 12'o4567;
+    parameter qdata2 = 12'o7664;
+
     //Not sure how you're supposed to do this, but this seems to work...
     //assign rx_clk_in_p_tb_o = rx_clk_in_p_tb;
 
@@ -108,10 +115,11 @@ module axi_ad9361_dev_if_tb
     end
 
     //Insert data generation here... for now making it static (still have to clock it because of high/low bit transitions)
+    //This block simulates data coming from the AD9364 that was received from RF
     initial
         begin: RX_DATA_GEN
-            rx_data_in_p_tb = 6'b000000;
-            //wire up dac_r1_mode and adc_r1_mode based on the param value
+            rx_data_in_p_tb = 6'o00;
+            //wire up dac_r1_mode and adc_r1_mode based on the param value (dumb place to put this but w/e)
             if(ADC_RXTX_1_MODE == 1) begin
                 dac_r1_mode_tb = 1'b1;
                 adc_r1_mode_tb = 1'b1;
@@ -124,21 +132,40 @@ module axi_ad9361_dev_if_tb
             //in 1rx 1tx mode, the high bits go at the positive edge of the frame (I then Q)
             //and low bits do the same at the negative edge of the frame
             if(ADC_RXTX_1_MODE == 1) begin
+                //Transmit the first I/Q data
                 @(posedge rx_frame_in_p_tb)
                 #1
-                rx_data_in_p_tb = 6'b101010; //I data, 11:6
+                rx_data_in_p_tb = idata1[11:6];
                 //Now wait for the negative edge of the clock to put in the Q data
                 @(negedge rx_clk_in_p_tb)
                 #1
-                rx_data_in_p_tb = 6'b001001; //Q data, 11:6
+                rx_data_in_p_tb = qdata1[11:6];
 
                 @(negedge rx_frame_in_p_tb) //Not sure if making this sequential is "proper"
                 #1
-                rx_data_in_p_tb = 6'b110110; //I data, 5:0
+                rx_data_in_p_tb = idata1[5:0];
 
                 @(negedge rx_clk_in_p_tb)
                 #1
-                rx_data_in_p_tb = 6'b100010; //Q data, 5:0
+                rx_data_in_p_tb = qdata1[5:0];
+
+                //now transmit some different data
+                @(posedge rx_frame_in_p_tb)
+                #1
+                rx_data_in_p_tb = idata2[11:6];
+
+                @(negedge rx_clk_in_p_tb)
+                #1
+                rx_data_in_p_tb = qdata2[11:6];
+
+                @(negedge rx_frame_in_p_tb)
+                #1
+                rx_data_in_p_tb = idata2[5:0];
+
+                @(negedge rx_clk_in_p_tb)
+                #1
+                rx_data_in_p_tb = qdata2[5:0];
+
             //In 2rx 2tx mode, you do all the 11:6, I then Q, then 5:0, I then Q, for channel 1 on the pos edge of the frame
             //and the same for channel 2 but on the negative edge of the frame
             end else begin
