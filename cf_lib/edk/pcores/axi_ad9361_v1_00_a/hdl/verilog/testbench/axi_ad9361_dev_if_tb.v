@@ -4,56 +4,52 @@
 
 module axi_ad9361_dev_if_tb
     (
-        // physical interface (receive)
-        rx_clk_in_p_tb,
-        rx_clk_in_n_tb,
-        rx_frame_in_p_tb,
-        rx_frame_in_n_tb,
-        rx_data_in_p_tb,
-        rx_data_in_n_tb,
+        // // physical interface (receive)
+        // rx_clk_in_p_tb,
+        // rx_clk_in_n_tb,
+        // rx_frame_in_p_tb,
+        // rx_frame_in_n_tb,
+        // rx_data_in_p_tb,
+        // rx_data_in_n_tb,
 
-        // physical interface (transmit)
-        tx_clk_out_p_tb,
-        tx_clk_out_n_tb,
-        tx_frame_out_p_tb,
-        tx_frame_out_n_tb,
-        tx_data_out_p_tb,
-        tx_data_out_n_tb,
+        // // physical interface (transmit)
+        // tx_clk_out_p_tb,
+        // tx_clk_out_n_tb,
+        // tx_frame_out_p_tb,
+        // tx_frame_out_n_tb,
+        // tx_data_out_p_tb,
+        // tx_data_out_n_tb,
 
-        // clock (common to both receive and transmit)
-        clk_tb,
+        // // clock (common to both receive and transmit)
+        // clk_tb,
 
-        // receive data path interface
-        adc_valid_tb,
-        adc_data_i1_tb,
-        adc_data_q1_tb,
-        adc_data_i2_tb,
-        adc_data_q2_tb,
-        adc_status_tb,
-        adc_r1_mode_tb,
+        // // receive data path interface
+        // adc_valid_tb,
+        // adc_data_i1_tb,
+        // adc_data_q1_tb,
+        // adc_data_i2_tb,
+        // adc_data_q2_tb,
+        // adc_status_tb,
+        // adc_r1_mode_tb,
 
-        // transmit data path interface
-        dac_valid_tb,
-        dac_data_i1_tb,
-        dac_data_q1_tb,
-        dac_data_i2_tb,
-        dac_data_q2_tb,
-        dac_r1_mode_tb,
+        // // transmit data path interface
+        // dac_valid_tb,
+        // dac_data_i1_tb,
+        // dac_data_q1_tb,
+        // dac_data_i2_tb,
+        // dac_data_q2_tb,
+        // dac_r1_mode_tb,
 
-        // delay control signals
-        delay_clk_tb,
-        delay_rst_tb,
-        delay_sel_tb,
-        delay_rwn_tb,
-        delay_addr_tb,
-        delay_wdata_tb,
-        delay_rdata_tb,
-        delay_ack_t_tb,
-        delay_locked_tb
-
-        // chipscope signals
-        //dev_dbg_trigger_tb,
-        //dev_dbg_data_tb
+        // // delay control signals
+        // delay_clk_tb,
+        // delay_rst_tb,
+        // delay_sel_tb,
+        // delay_rwn_tb,
+        // delay_addr_tb,
+        // delay_wdata_tb,
+        // delay_rdata_tb,
+        // delay_ack_t_tb,
+        // delay_locked_tb
     );
 
     // this parameter controls the buffer type based on the target device.
@@ -133,48 +129,48 @@ module axi_ad9361_dev_if_tb
         begin: CLK_GEN
         rx_clk_in_p_tb = 0;
         rx_clk_in_n_tb = 1;
-        forever
-            begin
-                #100
-                rx_clk_in_p_tb = ~rx_clk_in_p_tb;
-                rx_clk_in_n_tb = ~rx_clk_in_n_tb;
-            end
+    forever
+        begin
+            #100
+            rx_clk_in_p_tb = ~rx_clk_in_p_tb;
+            rx_clk_in_n_tb = ~rx_clk_in_n_tb;
         end
-    end
+    end    
 
     initial
         begin: RX_FRAME_GEN
-        rx_frame_p_tb = 0;
-        rx_frame_n_tb = 1;
-        forever
-            begin
-                //in 1rx 1tx mode, switch the frame at every positive clock edge
-                //See page 110 of the AD9361 Reference Manual (rx_clk_in_p is hooked up to DATA_CLK_P)
-                if(ADC_RXTX_1_MODE == 1) begin
-                    @(posedge rx_clk_in_p_tb)
-                    #1;
-                    rx_frame_p_tb ~= rx_frame_p_tb;
-                    rx_frame_n_tb ~= rx_frame_n_tb;
-                //in 2rx 2tx mode, switch the frame every other positive clock edge
-                end else begin
-                    @(posedge rx_clk_in_p_tb)
-                    #1
-                    @(posedge rx_clk_in_p_tb)
-                    #1
-                    rx_frame_p_tb ~= rx_frame_p_tb;
-                    rx_frame_n_tb ~= rx_frame_n_tb;
-                end
+        rx_frame_in_p_tb = 0;
+        rx_frame_in_n_tb = 1;
+    forever
+        begin
+            //in 1rx 1tx mode, switch the frame at every positive clock edge
+            //See page 110 of the AD9361 Reference Manual (rx_clk_in_p is hooked up to DATA_CLK_P)
+            if(ADC_RXTX_1_MODE == 1) begin
+                @(posedge rx_clk_in_p_tb)
+                #1;
+                rx_frame_in_p_tb = ~rx_frame_in_p_tb;
+                rx_frame_in_n_tb = ~rx_frame_in_n_tb;
+            //in 2rx 2tx mode, switch the frame every other positive clock edge
+            end else begin
+                @(posedge rx_clk_in_p_tb)
+                #1
+                @(posedge rx_clk_in_p_tb)
+                #1
+                rx_frame_in_p_tb = ~rx_frame_in_p_tb;
+                rx_frame_in_n_tb = ~rx_frame_in_n_tb;
             end
         end
     end
 
     //wire up dac_r1_mode and adc_r1_mode based on the param value
-    if(ADC_RXTX_1_MODE == 1) begin
-        dac_r1_mode_tb <= 1'b1;
-        dac_r1_mode_tb <= 1'b1;
-    end else begin
-        dac_r1_mode_tb <= 1'b0;
-        dac_r1_mode_tb <= 1'b0;
+    always @(*) begin
+        if(ADC_RXTX_1_MODE == 1) begin   
+            dac_r1_mode_tb = 1'b1;
+            dac_r1_mode_tb = 1'b1;        
+        end else begin
+            dac_r1_mode_tb = 1'b0;
+            dac_r1_mode_tb = 1'b0;
+        end
     end
 
 
@@ -182,36 +178,34 @@ module axi_ad9361_dev_if_tb
     initial
         begin: RX_DATA_GEN
             rx_data_in_p_tb = 5'b00000;
-        forever
-            begin
-                //in 1rx 1tx mode, the high bits go at the positive edge of the frame (I then Q)
-                //and low bits do the same at the negative edge of the frame
-                if(ADC_RXTX_1_MODE == 1) begin
-                    @(posedge rx_frame_p_tb)
-                    #1
-                    rx_data_in_p_tb = 6'b101010; //I data, 11:6
-                    //Now wait for the negative edge of the clock to put in the Q data
-                    @(negedge rx_clck_in_p_tb)
-                    #1
-                    rx_data_in_p_tb = 6'b001001; //Q data, 11:6
+    forever
+        begin
+            rx_data_in_n_tb <= ~rx_data_in_p_tb;
+            //in 1rx 1tx mode, the high bits go at the positive edge of the frame (I then Q)
+            //and low bits do the same at the negative edge of the frame
+            if(ADC_RXTX_1_MODE == 1) begin
+                @(posedge rx_frame_in_p_tb)
+                #1
+                rx_data_in_p_tb = 6'b101010; //I data, 11:6
+                //Now wait for the negative edge of the clock to put in the Q data
+                @(negedge rx_clk_in_p_tb)
+                #1
+                rx_data_in_p_tb = 6'b001001; //Q data, 11:6
 
-                    @(negedge rx_frame_p_tb) //Not sure if making this sequential is "proper"
-                    #1
-                    rx_data_in_p_tb = 6'b110110; //I data, 5:0
+                @(negedge rx_frame_in_p_tb) //Not sure if making this sequential is "proper"
+                #1
+                rx_data_in_p_tb = 6'b110110; //I data, 5:0
 
-                    @(negedge rx_clck_in_p_tb)
-                    #1
-                    rx_data_in_p_tb = 6'b100010; //Q data, 5:0
-                //In 2rx 2tx mode, you do all the 11:6, I then Q, then 5:0, I then Q, for channel 1 on the pos edge of the frame
-                //and the same for channel 2 but on the negative edge of the frame
-                end else begin
-                    rx_data_in_p_tb = 5'b110011; //TODO: Implementme! (making everything the same right now)
-                end
+                @(negedge rx_clk_in_p_tb)
+                #1
+                rx_data_in_p_tb = 6'b100010; //Q data, 5:0
+            //In 2rx 2tx mode, you do all the 11:6, I then Q, then 5:0, I then Q, for channel 1 on the pos edge of the frame
+            //and the same for channel 2 but on the negative edge of the frame
+            end else begin
+                rx_data_in_p_tb = 5'b110011; //TODO: Implementme! (making everything the same right now)
             end
         end
     end
-
-    assign rx_data_in_n_tb = ~rx_data_in_p_tb
 
     //Implement DAC interface
     initial
@@ -221,58 +215,59 @@ module axi_ad9361_dev_if_tb
             dac_data_q1_tb = 1'b0;
             dac_data_i2_tb = 1'b0;
             dac_data_q2_tb = 1'b0;
-        forever
-            begin
-                //Transmitter IP is synchronized to clk, which is synchronized to the differential rx_clk_in_p
-                if(ADC_RXTX_1_MODE == 1) begin
-                    @(posedge clk_tb) //This also serves to clock out the 2nd two frames (I/Q, 5:0)
-                    #1
-                    dac_data_i1_tb = 12'101010110110;
-                    dac_data_q1_tb = 12'001001100010;
-                    dac_valid = 1'b1; //This preps the dev_if logic to take in the data
+    forever
+        begin
+            //Transmitter IP is synchronized to clk, which is synchronized to the differential rx_clk_in_p
+            if(ADC_RXTX_1_MODE == 1) begin
+                @(posedge clk_tb) //This also serves to clock out the 2nd two frames (I/Q, 5:0)
+                #1
+                dac_data_i1_tb = 12'b101010110110;
+                dac_data_q1_tb = 12'b001001100010;
+                dac_valid_tb = 1'b1; //This preps the dev_if logic to take in the data
 
-                    @(posedge clk_tb) //When this occurs, the gets taken in, and later clocked out on I/Q, 11:6
-                    #1
-                    dac_valid = 1'b0; //With the data taken in, valid must go low again
+                @(posedge clk_tb) //When this occurs, the gets taken in, and later clocked out on I/Q, 11:6
+                #1
+                dac_valid_tb = 1'b0; //With the data taken in, valid must go low again
 
-                    @(posedge clk_tb) //This is just here so we can send alternating data packets
-                    #1
-                    dac_data_i1_tb = 12'110011001100;
-                    dac_data_q1_tb = 12'101010100001;
-                    dac_valid = 1'b1;
+                @(posedge clk_tb) //This is just here so we can send alternating data packets
+                #1
+                dac_data_i1_tb = 12'b110011001100;
+                dac_data_q1_tb = 12'b101010100001;
+                dac_valid_tb = 1'b1;
 
-                    @(posedge clk_tb)
-                    #1
-                    dac_valid = 1'b0;
+                @(posedge clk_tb)
+                #1
+                dac_valid_tb = 1'b0;
 
-                end else begin
-                    //Not implemented atm
-                    dac_data_i1_tb = 12'000000000000;
-                    dac_data_q1_tb = 12'000000000000;
-                    dac_valid = 1'b0;
-                end
+            end else begin
+                //Not implemented atm
+                dac_data_i1_tb = 12'b000000000000;
+                dac_data_q1_tb = 12'b000000000000;
+                dac_valid_tb = 1'b0;
             end
         end
     end
 
 
     //Set all the delay registers to 0...
-    delay_rst_tb <= 1'b0;
-    delay_sel_tb <= 1'b0;
-    delay_rwn_tb <= 1'b0;
-    delay_addr_tb <= 8'b00000000;
-    delay_wdata_tb <= 5'b00000;
+    always @(*) begin
+        delay_rst_tb <= 1'b0;
+        delay_sel_tb <= 1'b0;
+        delay_rwn_tb <= 1'b0;
+        delay_addr_tb <= 8'b00000000;
+        delay_wdata_tb <= 5'b00000;
+    end
 
     //Generate the delay clock
     initial
         begin: DELAY_CLK_GEN
         delay_clk_tb = 1;
-        forever
-            begin
-                #5 delay_clk_tb = ~delay_clk_tb; //200 MHz
-            end
+    forever
+        begin
+            #5 delay_clk_tb = ~delay_clk_tb; //200 MHz
         end
     end
+    
 
     axi_ad9361_dev_if #(
         .PCORE_BUFTYPE (PCORE_BUFTYPE),
@@ -298,7 +293,7 @@ module axi_ad9361_dev_if_tb
         .adc_data_q2 (adc_data_q2_s_tb),
         .adc_status (adc_status_s_tb),
         .adc_r1_mode (adc_r1_mode_tb),
-        .dac_valid (dac_valid_s_tb),
+        .dac_valid (dac_valid_tb),
         .dac_data_i1 (dac_data_i1_s_tb),
         .dac_data_q1 (dac_data_q1_s_tb),
         .dac_data_i2 (dac_data_i2_s_tb),
