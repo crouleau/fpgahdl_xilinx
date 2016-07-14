@@ -377,8 +377,8 @@ module axi_ad9361_dev_if (
   IBUFDS i_rx_data_ibuf (
     .I (rx_data_in_p[l_inst]),
     .IB (rx_data_in_n[l_inst]),
-    .O (rx_data_ibuf_s[l_inst]))
-
+    .O (rx_data_ibuf_s[l_inst]));    
+    
   IDDR #(
     .DDR_CLK_EDGE ("SAME_EDGE_PIPELINED"),
     .INIT_Q1 (1'b0),

@@ -196,7 +196,7 @@ module axi_ad9361_dev_if_tb
     end
 
     axi_ad9361_dev_if #(
-        .PCORE_BUFTYPE (PCORE_BUFTYPE)
+        .PCORE_BUFTYPE (PCORE_BUFTYPE))
     i_dev_if (
         .rx_clk_in_p (rx_clk_in_p_tb),
         .rx_clk_in_n (rx_clk_in_n_tb),
