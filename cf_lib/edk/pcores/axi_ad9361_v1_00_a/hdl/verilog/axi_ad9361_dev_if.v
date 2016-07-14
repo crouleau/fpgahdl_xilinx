@@ -338,6 +338,9 @@ module axi_ad9361_dev_if (
 
   assign tx_data_sel_s = {tx_data_cnt[2], dac_r1_mode, tx_data_cnt[1:0]}; //concatenation
 
+  //Colden: This seems to shut down if dac valid doesn't go high again at the right point
+  //Also, if dac_valid doesn't go high after two transmission frames, I think it repeats the most
+  //recently sent data once!
   always @(posedge clk) begin
     if (dac_valid == 1'b1) begin
       tx_data_cnt <= 3'b100;
