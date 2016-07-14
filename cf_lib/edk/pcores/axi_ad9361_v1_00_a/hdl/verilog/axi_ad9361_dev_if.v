@@ -462,9 +462,9 @@ module axi_ad9361_dev_if (
   if (PCORE_BUFTYPE == PCORE_VIRTEX6) begin
   (* IODELAY_GROUP = PCORE_IODELAY_GROUP *)
   IODELAYE1 #(
-    .CINVCTRL_SEL ("FALSE"),
+    .CINVCTRL_SEL (0),
     .DELAY_SRC ("I"),
-    .HIGH_PERFORMANCE_MODE ("TRUE"),
+    .HIGH_PERFORMANCE_MODE (1),
     .IDELAY_TYPE ("VAR_LOADABLE"),
     .IDELAY_VALUE (0),
     .ODELAY_TYPE ("FIXED"),
@@ -488,13 +488,13 @@ module axi_ad9361_dev_if (
   end else begin
   (* IODELAY_GROUP = PCORE_IODELAY_GROUP *)
   IDELAYE2 #(
-    .CINVCTRL_SEL ("FALSE"),
+    .CINVCTRL_SEL (0),
     .DELAY_SRC ("IDATAIN"),
-    .HIGH_PERFORMANCE_MODE ("FALSE"),
+    .HIGH_PERFORMANCE_MODE (0),
     .IDELAY_TYPE ("VAR_LOAD"),
     .IDELAY_VALUE (0),
     .REFCLK_FREQUENCY (200.0),
-    .PIPE_SEL ("FALSE"),
+    .PIPE_SEL (0),
     .SIGNAL_PATTERN ("DATA"))
   i_rx_data_idelay (
     .CE (1'b0),
@@ -539,9 +539,9 @@ module axi_ad9361_dev_if (
   if (PCORE_BUFTYPE == PCORE_VIRTEX6) begin
   (* IODELAY_GROUP = PCORE_IODELAY_GROUP *)
   IODELAYE1 #(
-    .CINVCTRL_SEL ("FALSE"),
+    .CINVCTRL_SEL (0),
     .DELAY_SRC ("I"),
-    .HIGH_PERFORMANCE_MODE ("TRUE"),
+    .HIGH_PERFORMANCE_MODE (1),
     .IDELAY_TYPE ("VAR_LOADABLE"),
     .IDELAY_VALUE (0),
     .ODELAY_TYPE ("FIXED"),
@@ -565,13 +565,13 @@ module axi_ad9361_dev_if (
   end else begin
   (* IODELAY_GROUP = PCORE_IODELAY_GROUP *)
   IDELAYE2 #(
-    .CINVCTRL_SEL ("FALSE"),
+    .CINVCTRL_SEL (0),
     .DELAY_SRC ("IDATAIN"),
-    .HIGH_PERFORMANCE_MODE ("FALSE"),
+    .HIGH_PERFORMANCE_MODE (0),
     .IDELAY_TYPE ("VAR_LOAD"),
     .IDELAY_VALUE (0),
     .REFCLK_FREQUENCY (200.0),
-    .PIPE_SEL ("FALSE"),
+    .PIPE_SEL (0),
     .SIGNAL_PATTERN ("DATA"))
   i_rx_frame_idelay (
     .CE (1'b0),

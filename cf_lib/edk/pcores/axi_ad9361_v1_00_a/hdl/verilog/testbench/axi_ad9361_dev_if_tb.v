@@ -229,7 +229,7 @@ module axi_ad9361_dev_if_tb
     end
     
 
-    /*
+    
     axi_ad9361_dev_if #(
         .PCORE_BUFTYPE (PCORE_BUFTYPE),
         .PCORE_IODELAY_GROUP (PCORE_IODELAY_GROUP))
@@ -271,6 +271,6 @@ module axi_ad9361_dev_if_tb
         .delay_locked (delay_locked_tb),
         .dev_dbg_trigger (dev_dbg_trigger_tb),
         .dev_dbg_data (dev_dbg_data_tb)
-    );*/
+    );
 
 endmodule
