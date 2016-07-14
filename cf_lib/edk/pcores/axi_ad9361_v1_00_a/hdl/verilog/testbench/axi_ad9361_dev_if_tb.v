@@ -1,12 +1,12 @@
 //Testbench for axi_ad9361_dev_if.v
 
-`timescale 1ns/100ps
+`timescale 1ns/1ns
 
 module axi_ad9361_dev_if_tb
     (
         // // physical interface (receive)
-        // rx_clk_in_p_tb,
-        // rx_clk_in_n_tb,
+        rx_clk_in_p_tb_o
+        // rx_clk_in_n_tb
         // rx_frame_in_p_tb,
         // rx_frame_in_n_tb,
         // rx_data_in_p_tb,
@@ -14,7 +14,7 @@ module axi_ad9361_dev_if_tb
 
         // // physical interface (transmit)
         // tx_clk_out_p_tb,
-        // tx_clk_out_n_tb,
+        // tx_clk_out_n_tb
         // tx_frame_out_p_tb,
         // tx_frame_out_n_tb,
         // tx_data_out_p_tb,
@@ -71,6 +71,8 @@ module axi_ad9361_dev_if_tb
     // see ad9361_calculate_rf_clock_chain
     reg           rx_clk_in_p_tb; //simulate DATA_CLK_P in fmcomms4
     reg           rx_clk_in_n_tb; //Need to simulate DATA_CLK_N in fmcomms4
+    output        rx_clk_in_p_tb_o;
+    //output        rx_clk_in_n_tb_o;
     reg           rx_frame_in_p_tb; //This comes from the AD9364 ("RX_FRAME_P")
     reg           rx_frame_in_n_tb;
     reg   [ 5:0]  rx_data_in_p_tb;
@@ -121,9 +123,11 @@ module axi_ad9361_dev_if_tb
     wire          delay_locked_tb;
 
     // chipscope signals
-    //wire  [ 3:0]  dev_dbg_trigger;
-    //wire [297:0]  dev_dbg_data;
-
+    wire  [ 3:0]  dev_dbg_trigger_tb;
+    wire [297:0]  dev_dbg_data_tb;
+    
+    //Not sure how you're supposed to do this, but this seems to work...
+    assign rx_clk_in_p_tb_o = rx_clk_in_p_tb;
 
     initial
         begin: CLK_GEN
@@ -269,6 +273,7 @@ module axi_ad9361_dev_if_tb
     end
     
 
+    /*
     axi_ad9361_dev_if #(
         .PCORE_BUFTYPE (PCORE_BUFTYPE),
         .PCORE_IODELAY_GROUP (PCORE_IODELAY_GROUP))
@@ -287,29 +292,29 @@ module axi_ad9361_dev_if_tb
         .tx_data_out_n (tx_data_out_n_tb),
         .clk (clk_tb),
         .adc_valid (adc_valid_s_tb),
-        .adc_data_i1 (adc_data_i1_s_tb),
-        .adc_data_q1 (adc_data_q1_s_tb),
-        .adc_data_i2 (adc_data_i2_s_tb),
-        .adc_data_q2 (adc_data_q2_s_tb),
-        .adc_status (adc_status_s_tb),
+        .adc_data_i1 (adc_data_i1_tb),
+        .adc_data_q1 (adc_data_q1_tb),
+        .adc_data_i2 (adc_data_i2_tb),
+        .adc_data_q2 (adc_data_q2_tb),
+        .adc_status (adc_status_tb),
         .adc_r1_mode (adc_r1_mode_tb),
         .dac_valid (dac_valid_tb),
-        .dac_data_i1 (dac_data_i1_s_tb),
-        .dac_data_q1 (dac_data_q1_s_tb),
-        .dac_data_i2 (dac_data_i2_s_tb),
-        .dac_data_q2 (dac_data_q2_s_tb),
+        .dac_data_i1 (dac_data_i1_tb),
+        .dac_data_q1 (dac_data_q1_tb),
+        .dac_data_i2 (dac_data_i2_tb),
+        .dac_data_q2 (dac_data_q2_tb),
         .dac_r1_mode (dac_r1_mode_tb),
         .delay_clk (delay_clk_tb),
         .delay_rst (delay_rst_tb),
-        .delay_sel (delay_sel_s_tb),
-        .delay_rwn (delay_rwn_s_tb),
-        .delay_addr (delay_addr_s_tb),
-        .delay_wdata (delay_wdata_s_tb),
-        .delay_rdata (delay_rdata_s_tb),
-        .delay_ack_t (delay_ack_t_s_tb),
-        .delay_locked (delay_locked_s_tb),
+        .delay_sel (delay_sel_tb),
+        .delay_rwn (delay_rwn_tb),
+        .delay_addr (delay_addr_tb),
+        .delay_wdata (delay_wdata_tb),
+        .delay_rdata (delay_rdata_tb),
+        .delay_ack_t (delay_ack_t_tb),
+        .delay_locked (delay_locked_tb),
         .dev_dbg_trigger (dev_dbg_trigger_tb),
         .dev_dbg_data (dev_dbg_data_tb)
-    );
+    );*/
 
 endmodule
