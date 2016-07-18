@@ -5,8 +5,8 @@
 module axi_ad9364_data_gen
     (
         // physical interface (Rx - coming from the AD9364)
-        //rx_clk_in_phys_p,
-        //rx_clk_in_phys_n,
+        rx_clk_in_phys_p, //TESTBENCH: For a testbench, comment me out!
+        rx_clk_in_phys_n, //TESTBENCH: For a testbench, comment me out!
         rx_frame_in_phys_p,
         rx_frame_in_phys_n,
         rx_data_in_phys_p,
@@ -80,7 +80,8 @@ module axi_ad9364_data_gen
     parameter qdata1_tx = 12'o1753;
     parameter qdata2_tx = 12'o1337;
 
-    initial
+    //TESTBENCH: For a testbench, uncomment this block!
+    /*initial
         begin: CLK_GEN
         rx_clk_in_phys_p = 0;
         rx_clk_in_phys_n = 1;
@@ -90,7 +91,7 @@ module axi_ad9364_data_gen
             rx_clk_in_phys_p = ~rx_clk_in_phys_p;
             rx_clk_in_phys_n = ~rx_clk_in_phys_n;
         end
-    end
+    end*/
 
     initial
         begin: DAC_DATA_GEN
@@ -107,7 +108,7 @@ module axi_ad9364_data_gen
             dac_r1_mode_gen = 1'b0;
             adc_r1_mode = 1'b0;
         end
-        
+
     forever
         begin
             @(posedge clk)
