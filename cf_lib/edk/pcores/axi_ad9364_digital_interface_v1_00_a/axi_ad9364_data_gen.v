@@ -99,6 +99,15 @@ module axi_ad9364_data_gen
         dac_data_q1_gen = 1'b0;
         dac_data_i2_gen = 1'b0;
         dac_data_q2_gen = 1'b0;
+        dac_data_sel = 2'b00;
+        if(ADC_RXTX_1_MODE == 1) begin
+            dac_r1_mode_gen = 1'b1;
+            adc_r1_mode = 1'b1;
+        end else begin
+            dac_r1_mode_gen = 1'b0;
+            adc_r1_mode = 1'b0;
+        end
+        
     forever
         begin
             @(posedge clk)
@@ -127,6 +136,9 @@ module axi_ad9364_data_gen
                     2'b11: begin
                         dac_valid <= 1'b0;
                         dac_data_sel <= dac_data_sel + 1'b1;
+                    end
+                    default: begin
+                        dac_data_sel <= 2'b00; //Shouldn't get here, but just for safety I suppose
                     end
                 endcase
             end else begin
@@ -160,7 +172,7 @@ module axi_ad9364_data_gen
         .adc_data_q2 (adc_data_q2_rx),
         .adc_status (adc_status),
         .adc_r1_mode (adc_r1_mode),
-        .dac_valid (dac_valid_gen),
+        .dac_valid (dac_valid),
         .dac_data_i1 (dac_data_i1_gen),
         .dac_data_q1 (dac_data_q1_gen),
         .dac_data_i2 (dac_data_i2_gen),
