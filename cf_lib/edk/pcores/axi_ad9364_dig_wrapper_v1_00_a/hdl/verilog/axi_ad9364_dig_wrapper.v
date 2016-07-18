@@ -2,7 +2,7 @@
 
 `timescale 1ns/1ns
 
-module axi_ad9364_data_gen
+module axi_ad9364_dig_wrapper
     (
         // physical interface (Rx - coming from the AD9364)
         rx_clk_in_phys_p, //TESTBENCH: For a testbench, comment me out!
