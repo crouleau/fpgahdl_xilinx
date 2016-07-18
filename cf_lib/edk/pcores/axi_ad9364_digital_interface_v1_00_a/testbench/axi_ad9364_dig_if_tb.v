@@ -1,8 +1,8 @@
-//Testbench for axi_ad9361_dev_if.v
+//Testbench for axi_ad9364_dig_if.v
 
 `timescale 1ns/1ns
 
-module axi_ad9361_dev_if_tb
+module axi_ad9364_dig_if_tb
     (
         //No physical interface
         //Use "-novopt" in modelsim to ensure signal visibility
@@ -177,7 +177,7 @@ module axi_ad9361_dev_if_tb
             //In 2rx 2tx mode, you do all the 11:6, I then Q, then 5:0, I then Q, for channel 1 on the pos edge of the frame
             //and the same for channel 2 but on the negative edge of the frame
             end else begin
-                rx_data_in_p_tb = 6'o7777; //TODO: Implementme! (making everything the same right now)
+                rx_data_in_p_tb = 6'o77; //TODO: Implementme! (making everything the same right now)
             end
         end
     end
@@ -226,7 +226,7 @@ module axi_ad9361_dev_if_tb
         end
     end
 
-    axi_ad9361_dev_if #(
+    axi_ad9364_dig_if #(
         .PCORE_BUFTYPE (PCORE_BUFTYPE))
     i_dev_if (
         .rx_clk_in_p (rx_clk_in_p_tb),
