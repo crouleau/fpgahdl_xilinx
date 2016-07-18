@@ -22,7 +22,28 @@ module axi_ad9364_data_gen
 
         //debug stuff for chipscope
         dev_dbg_trigger,
-        dev_dbg_data
+        dev_dbg_data,
+        
+        // axi interface (NOT USED, just a dummy interface!)
+        s_axi_aclk,
+        s_axi_aresetn,
+        s_axi_awvalid,
+        s_axi_awaddr,
+        s_axi_awready,
+        s_axi_wvalid,
+        s_axi_wdata,
+        s_axi_wstrb,
+        s_axi_wready,
+        s_axi_bvalid,
+        s_axi_bresp,
+        s_axi_bready,
+        s_axi_arvalid,
+        s_axi_araddr,
+        s_axi_arready,
+        s_axi_rvalid,
+        s_axi_rdata,
+        s_axi_rresp,
+        s_axi_rready
     );
 
     // this parameter controls the buffer type based on the target device.
@@ -32,8 +53,8 @@ module axi_ad9364_data_gen
     parameter ADC_RXTX_1_MODE = 1; //Set to 1 to use just 1 tx/rx channel (you can use 1rx2tx, etc, but not supported atm)
 
     // physical interface (Rx - input to module)
-    reg           rx_clk_in_phys_p;
-    reg           rx_clk_in_phys_n;
+    input           rx_clk_in_phys_p; //TESTBENCH: Change to "reg" for testbench, "input" for main HDL core
+    input           rx_clk_in_phys_n; //TESTBENCH: Change to "reg" for testbench, "input" for main HDL core
     input           rx_frame_in_phys_p;
     input           rx_frame_in_phys_n;
     input   [ 5:0]  rx_data_in_phys_p;
@@ -47,6 +68,27 @@ module axi_ad9364_data_gen
     output          tx_frame_out_phys_n;
     output  [ 5:0]  tx_data_out_phys_p;
     output  [ 5:0]  tx_data_out_phys_n;
+    
+    // axi interface (NOT USED)
+    input           s_axi_aclk;
+    input           s_axi_aresetn;
+    input           s_axi_awvalid;
+    input   [31:0]  s_axi_awaddr;
+    output          s_axi_awready;
+    input           s_axi_wvalid;
+    input   [31:0]  s_axi_wdata;
+    input   [ 3:0]  s_axi_wstrb;
+    output          s_axi_wready;
+    output          s_axi_bvalid;
+    output  [ 1:0]  s_axi_bresp;
+    input           s_axi_bready;
+    input           s_axi_arvalid;
+    input   [31:0]  s_axi_araddr;
+    output          s_axi_arready;
+    output          s_axi_rvalid;
+    output  [31:0]  s_axi_rdata;
+    output  [ 1:0]  s_axi_rresp;
+    input           s_axi_rready;
 
 
     //*****Internal Signals begin now *****
