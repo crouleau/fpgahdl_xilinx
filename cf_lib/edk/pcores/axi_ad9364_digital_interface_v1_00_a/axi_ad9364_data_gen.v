@@ -5,8 +5,8 @@
 module axi_ad9364_data_gen
     (
         // physical interface (Rx - coming from the AD9364)
-        rx_clk_in_phys_p,
-        rx_clk_in_phys_n,
+        //rx_clk_in_phys_p,
+        //rx_clk_in_phys_n,
         rx_frame_in_phys_p,
         rx_frame_in_phys_n,
         rx_data_in_phys_p,
@@ -94,11 +94,11 @@ module axi_ad9364_data_gen
 
     initial
         begin: DAC_DATA_GEN
-            dac_valid = 1'b0;
-            dac_data_i1_gen = 1'b0;
-            dac_data_q1_gen = 1'b0;
-            dac_data_i2_gen = 1'b0;
-            dac_data_q2_gen = 1'b0;
+        dac_valid = 1'b0;
+        dac_data_i1_gen = 1'b0;
+        dac_data_q1_gen = 1'b0;
+        dac_data_i2_gen = 1'b0;
+        dac_data_q2_gen = 1'b0;
     forever
         begin
             @(posedge clk)
@@ -128,6 +128,7 @@ module axi_ad9364_data_gen
                         dac_valid <= 1'b0;
                         dac_data_sel <= dac_data_sel + 1'b1;
                     end
+                endcase
             end else begin
                 dac_valid <= 1'b0;
                 dac_data_i1_gen <= 0'o0000;
