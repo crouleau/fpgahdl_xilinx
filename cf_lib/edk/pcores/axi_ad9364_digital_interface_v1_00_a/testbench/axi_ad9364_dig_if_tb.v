@@ -242,7 +242,7 @@ module axi_ad9364_dig_if_tb
         .tx_data_out_p (tx_data_out_p_tb),
         .tx_data_out_n (tx_data_out_n_tb),
         .clk (clk_tb),
-        .adc_valid (adc_valid_s_tb),
+        .adc_valid (adc_valid_tb),
         .adc_data_i1 (adc_data_i1_tb),
         .adc_data_q1 (adc_data_q1_tb),
         .adc_data_i2 (adc_data_i2_tb),
