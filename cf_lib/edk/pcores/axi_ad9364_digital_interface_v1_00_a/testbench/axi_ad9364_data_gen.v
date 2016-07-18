@@ -28,8 +28,8 @@ module axi_ad9364_data_gen
     parameter ADC_RXTX_1_MODE = 1; //Set to 1 to use just 1 tx/rx channel (you can use 1rx2tx, etc, but not supported atm)
 
     // physical interface (Rx - input to module)
-    input           rx_clk_in_phys_p;
-    input           rx_clk_in_phys_n;
+    reg           rx_clk_in_phys_p;
+    reg           rx_clk_in_phys_n;
     input           rx_frame_in_phys_p;
     input           rx_frame_in_phys_n;
     input   [ 5:0]  rx_data_in_phys_p;
@@ -61,11 +61,12 @@ module axi_ad9364_data_gen
 
     // transmit data path interface
     reg           dac_valid;
-    reg   [11:0]  dac_data_i1_gen;
-    reg   [11:0]  dac_data_q1_gen;
-    reg   [11:0]  dac_data_i2_gen;
-    reg   [11:0]  dac_data_q2_gen;
+    reg [11:0]    dac_data_i1_gen;
+    reg [11:0]    dac_data_q1_gen;
+    reg [11:0]    dac_data_i2_gen;
+    reg [11:0]    dac_data_q2_gen;
     reg           dac_r1_mode_gen;
+    reg [1:0]     dac_data_sel;
 
     // chipscope signals
     wire  [ 3:0]  dev_dbg_trigger;
@@ -81,13 +82,13 @@ module axi_ad9364_data_gen
 
     initial
         begin: CLK_GEN
-        rx_clk_in_p_tb = 0;
-        rx_clk_in_n_tb = 1;
+        rx_clk_in_phys_p = 0;
+        rx_clk_in_phys_n = 1;
     forever
         begin
             #100
-            rx_clk_in_p_tb = ~rx_clk_in_p_tb;
-            rx_clk_in_n_tb = ~rx_clk_in_n_tb;
+            rx_clk_in_phys_p = ~rx_clk_in_phys_p;
+            rx_clk_in_phys_n = ~rx_clk_in_phys_n;
         end
     end
 
@@ -107,26 +108,30 @@ module axi_ad9364_data_gen
                         //On even clock edges, prep the data so that it can be read in
                         dac_data_sel <= dac_data_sel + 1'b1;
                         dac_valid <= 1'b1;
-                        dac_data_i1_tb <= idata1_tx;
-                        dac_data_q1_tb <= qdata1_tx;
+                        dac_data_i1_gen <= idata1_tx;
+                        dac_data_q1_gen <= qdata1_tx;
+                    end
                     2'b01: begin
                         //On odd clock edges, just set DAC valid false - the core is busy
                         //clocking out the previous data we gave it
                         dac_valid <= 1'b0;
                         dac_data_sel <= dac_data_sel + 1'b1;
+                    end
                     2'b10: begin
                         //Now clock in the second set of alternating data
                         dac_data_sel <= dac_data_sel + 1'b1;
                         dac_valid <= 1'b1;
-                        dac_data_i1_tb <= idata2_tx;
-                        dac_data_q1_tb <= qdata2_tx;
+                        dac_data_i1_gen <= idata2_tx;
+                        dac_data_q1_gen <= qdata2_tx;
+                    end
                     2'b11: begin
                         dac_valid <= 1'b0;
                         dac_data_sel <= dac_data_sel + 1'b1;
+                    end
             end else begin
                 dac_valid <= 1'b0;
-                dac_data_i1_tb <= 0'o0000;
-                dac_data_q1_tb <= 0'o0000; //not implemented
+                dac_data_i1_gen <= 0'o0000;
+                dac_data_q1_gen <= 0'o0000; //not implemented
             end
         end
     end
