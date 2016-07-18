@@ -18,7 +18,11 @@ module axi_ad9364_data_gen
         tx_frame_out_phys_p,,
         tx_frame_out_phys_n,
         tx_data_out_phys_p,
-        tx_data_out_phys_n
+        tx_data_out_phys_n,
+
+        //debug stuff for chipscope
+        dev_dbg_trigger,
+        dev_dbg_data
     );
 
     // this parameter controls the buffer type based on the target device.
@@ -69,8 +73,8 @@ module axi_ad9364_data_gen
     reg [1:0]     dac_data_sel;
 
     // chipscope signals
-    wire  [ 3:0]  dev_dbg_trigger;
-    wire [297:0]  dev_dbg_data;
+    output  [ 3:0]  dev_dbg_trigger;
+    output [297:0]  dev_dbg_data;
 
 
     //tx - what the "HDL" we're plugged into is supposedly transmitting (alternating between 1 and 2)
