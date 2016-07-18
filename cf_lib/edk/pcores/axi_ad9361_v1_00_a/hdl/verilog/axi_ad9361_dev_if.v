@@ -260,23 +260,27 @@ module axi_ad9361_dev_if (
   always @(posedge clk) begin
     rx_error_r1 <= ((rx_frame_s == 4'b1100) || (rx_frame_s == 4'b0011)) ? 1'b0 : 1'b1;
     rx_valid_r1 <= (rx_frame_s == 4'b1100) ? 1'b1 : 1'b0;
+    //If the previous frame was high, and now it's low, then we've clocked in the high and low I and Q bits. We stored the first 12 bits in rx_data_d.
     if (rx_frame_s == 4'b1100) begin
-      rx_data_i_r1 <= {rx_data_d[11:6], rx_data[11:6]};
-      rx_data_q_r1 <= {rx_data_d[ 5:0], rx_data[ 5:0]};
+      rx_data_i_r1 <= {rx_data_d[11:6], rx_data[11:6]}; //d, 11:16 corresponds to the first 6 bits clocked in from rx_data_in (I guess we're putting the first data in the high bits...)
+      rx_data_q_r1 <= {rx_data_d[ 5:0], rx_data[ 5:0]}; //d, 5:0 is the Q channel, the second 6 bits clocked in
     end
   end
 
   // receive data path for dual rf, frame is expected to qualify i/q msb and lsb for rf-1 only
-
+  // The frame is longer for dual mode - it has to clock in twice as much stuff. It aligns in the 0000 and 1111 case. 
+  // We know we're aligned as long as the first two and last two bits are the same (we're clocking in at falling and rising edge of the clock)
   always @(posedge clk) begin
     rx_error_r2 <= ((rx_frame_s == 4'b1111) || (rx_frame_s == 4'b1100) ||
       (rx_frame_s == 4'b0000) || (rx_frame_s == 4'b0011)) ? 1'b0 : 1'b1;
     rx_valid_r2 <= (rx_frame_s == 4'b0000) ? 1'b1 : 1'b0;
     if (rx_frame_s == 4'b1111) begin
-      rx_data_i1_r2 <= {rx_data_d[11:6], rx_data[11:6]};
+      // Channel 1 gets clocked in on a positive frame. I 11:6, Q 11:6, then I 5:0, Q 5:0
+      rx_data_i1_r2 <= {rx_data_d[11:6], rx_data[11:6]}; 
       rx_data_q1_r2 <= {rx_data_d[ 5:0], rx_data[ 5:0]};
     end
     if (rx_frame_s == 4'b0000) begin
+      //Channel two comes in on a negative frame, and works the same as ch1
       rx_data_i2_r2 <= {rx_data_d[11:6], rx_data[11:6]};
       rx_data_q2_r2 <= {rx_data_d[ 5:0], rx_data[ 5:0]};
     end
