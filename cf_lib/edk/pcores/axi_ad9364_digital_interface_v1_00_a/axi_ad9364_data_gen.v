@@ -23,7 +23,7 @@ module axi_ad9364_data_gen
         //debug stuff for chipscope
         dev_dbg_trigger,
         dev_dbg_data,
-        
+
         // axi interface (NOT USED, just a dummy interface!)
         s_axi_aclk,
         s_axi_aresetn,
@@ -47,10 +47,21 @@ module axi_ad9364_data_gen
     );
 
     // this parameter controls the buffer type based on the target device.
-    parameter   PCORE_BUFTYPE = 1; //Using Virtex 6!
     localparam  PCORE_7SERIES = 0;
     localparam  PCORE_VIRTEX6 = 1;
     parameter ADC_RXTX_1_MODE = 1; //Set to 1 to use just 1 tx/rx channel (you can use 1rx2tx, etc, but not supported atm)
+
+    //Not sure which of these I need, but it's for AXI stuff
+    parameter   PCORE_ID = 0;
+    parameter   PCORE_VERSION = 32'h00060061;
+    parameter   PCORE_BUFTYPE = 1; //Using Virtex 6!
+    parameter   PCORE_IODELAY_GROUP = "dev_if_delay_group";
+    parameter   PCORE_DAC_DP_DISABLE = 0;
+    parameter   PCORE_ADC_DP_DISABLE = 0;
+    parameter   C_S_AXI_MIN_SIZE = 32'hffff;
+    parameter   C_BASEADDR = 32'hffffffff;
+    parameter   C_HIGHADDR = 32'h00000000;
+
 
     // physical interface (Rx - input to module)
     input           rx_clk_in_phys_p; //TESTBENCH: Change to "reg" for testbench, "input" for main HDL core
@@ -68,7 +79,7 @@ module axi_ad9364_data_gen
     output          tx_frame_out_phys_n;
     output  [ 5:0]  tx_data_out_phys_p;
     output  [ 5:0]  tx_data_out_phys_n;
-    
+
     // axi interface (NOT USED)
     input           s_axi_aclk;
     input           s_axi_aresetn;
