@@ -84,6 +84,18 @@ module axi_ad9361_dev_if (
   dac_data_q2,
   dac_r1_mode,
 
+  // delay control signals
+
+  delay_clk,
+  delay_rst,
+  delay_sel,
+  delay_rwn,
+  delay_addr,
+  delay_wdata,
+  delay_rdata,
+  delay_ack_t,
+  delay_locked,
+
   // chipscope signals
 
   dev_dbg_trigger,
@@ -91,7 +103,8 @@ module axi_ad9361_dev_if (
 
   // this parameter controls the buffer type based on the target device.
 
-  parameter   PCORE_BUFTYPE = 1; //Using Virtex 6!
+  parameter   PCORE_BUFTYPE = 0;
+  parameter   PCORE_IODELAY_GROUP = "dev_if_delay_group";
   localparam  PCORE_7SERIES = 0;
   localparam  PCORE_VIRTEX6 = 1;
 
@@ -136,6 +149,18 @@ module axi_ad9361_dev_if (
   input   [11:0]  dac_data_q2;
   input           dac_r1_mode;
 
+  // delay control signals
+
+  input           delay_clk;
+  input           delay_rst;
+  input           delay_sel;
+  input           delay_rwn;
+  input   [ 7:0]  delay_addr;
+  input   [ 4:0]  delay_wdata;
+  output  [ 4:0]  delay_rdata;
+  output          delay_ack_t;
+  output          delay_locked;
+
   // chipscope signals
 
   output  [ 3:0]  dev_dbg_trigger;
@@ -173,15 +198,21 @@ module axi_ad9361_dev_if (
   reg             tx_frame = 'd0;
   reg     [ 5:0]  tx_data_p = 'd0;
   reg     [ 5:0]  tx_data_n = 'd0;
+  reg     [ 6:0]  delay_ld = 'd0;
+  reg     [ 4:0]  delay_rdata = 'd0;
+  reg             delay_ack_t = 'd0;
 
   // internal signals
 
   wire    [ 3:0]  rx_frame_s;
   wire    [ 3:0]  tx_data_sel_s;
+  wire    [ 4:0]  delay_rdata_s[6:0];
   wire    [ 5:0]  rx_data_ibuf_s;
+  wire    [ 5:0]  rx_data_idelay_s;
   wire    [ 5:0]  rx_data_p_s;
   wire    [ 5:0]  rx_data_n_s;
   wire            rx_frame_ibuf_s;
+  wire            rx_frame_idelay_s;
   wire            rx_frame_p_s;
   wire            rx_frame_n_s;
   wire    [ 5:0]  tx_data_oddr_s;
@@ -260,27 +291,23 @@ module axi_ad9361_dev_if (
   always @(posedge clk) begin
     rx_error_r1 <= ((rx_frame_s == 4'b1100) || (rx_frame_s == 4'b0011)) ? 1'b0 : 1'b1;
     rx_valid_r1 <= (rx_frame_s == 4'b1100) ? 1'b1 : 1'b0;
-    //If the previous frame was high, and now it's low, then we've clocked in the high and low I and Q bits. We stored the first 12 bits in rx_data_d.
     if (rx_frame_s == 4'b1100) begin
-      rx_data_i_r1 <= {rx_data_d[11:6], rx_data[11:6]}; //d, 11:16 corresponds to the first 6 bits clocked in from rx_data_in (I guess we're putting the first data in the high bits...)
-      rx_data_q_r1 <= {rx_data_d[ 5:0], rx_data[ 5:0]}; //d, 5:0 is the Q channel, the second 6 bits clocked in
+      rx_data_i_r1 <= {rx_data_d[11:6], rx_data[11:6]};
+      rx_data_q_r1 <= {rx_data_d[ 5:0], rx_data[ 5:0]};
     end
   end
 
   // receive data path for dual rf, frame is expected to qualify i/q msb and lsb for rf-1 only
-  // The frame is longer for dual mode - it has to clock in twice as much stuff. It aligns in the 0000 and 1111 case. 
-  // We know we're aligned as long as the first two and last two bits are the same (we're clocking in at falling and rising edge of the clock)
+
   always @(posedge clk) begin
     rx_error_r2 <= ((rx_frame_s == 4'b1111) || (rx_frame_s == 4'b1100) ||
       (rx_frame_s == 4'b0000) || (rx_frame_s == 4'b0011)) ? 1'b0 : 1'b1;
     rx_valid_r2 <= (rx_frame_s == 4'b0000) ? 1'b1 : 1'b0;
     if (rx_frame_s == 4'b1111) begin
-      // Channel 1 gets clocked in on a positive frame. I 11:6, Q 11:6, then I 5:0, Q 5:0
-      rx_data_i1_r2 <= {rx_data_d[11:6], rx_data[11:6]}; 
+      rx_data_i1_r2 <= {rx_data_d[11:6], rx_data[11:6]};
       rx_data_q1_r2 <= {rx_data_d[ 5:0], rx_data[ 5:0]};
     end
     if (rx_frame_s == 4'b0000) begin
-      //Channel two comes in on a negative frame, and works the same as ch1
       rx_data_i2_r2 <= {rx_data_d[11:6], rx_data[11:6]};
       rx_data_q2_r2 <= {rx_data_d[ 5:0], rx_data[ 5:0]};
     end
@@ -309,11 +336,8 @@ module axi_ad9361_dev_if (
   // transmit data path mux (reverse of what receive does above)
   // the count simply selets the data muxing on the ddr outputs
 
-  assign tx_data_sel_s = {tx_data_cnt[2], dac_r1_mode, tx_data_cnt[1:0]}; //concatenation
+  assign tx_data_sel_s = {tx_data_cnt[2], dac_r1_mode, tx_data_cnt[1:0]};
 
-  //Colden: This seems to shut down if dac valid doesn't go high again at the right point
-  //Also, if dac_valid doesn't go high after two transmission frames, I think it repeats the most
-  //recently sent data once!
   always @(posedge clk) begin
     if (dac_valid == 1'b1) begin
       tx_data_cnt <= 3'b100;
@@ -375,14 +399,115 @@ module axi_ad9361_dev_if (
     endcase
   end
 
+  // delay write interface, each delay element can be individually
+  // addressed, and a delay value can be directly loaded (no inc/dec stuff)
+
+  always @(posedge delay_clk) begin
+    if ((delay_sel == 1'b1) && (delay_rwn == 1'b0)) begin
+      case (delay_addr)
+        8'h06: delay_ld <= 7'h40;
+        8'h05: delay_ld <= 7'h20;
+        8'h04: delay_ld <= 7'h10;
+        8'h03: delay_ld <= 7'h08;
+        8'h02: delay_ld <= 7'h04;
+        8'h01: delay_ld <= 7'h02;
+        8'h00: delay_ld <= 7'h01;
+        default: delay_ld <= 7'h00;
+      endcase
+    end else begin
+      delay_ld <= 7'h00;
+    end
+  end
+
+  // delay read interface, a delay ack toggle is used to transfer data to the
+  // processor side- delay locked is independently transferred
+
+  always @(posedge delay_clk) begin
+    case (delay_addr)
+      8'h06: delay_rdata <= delay_rdata_s[6];
+      8'h05: delay_rdata <= delay_rdata_s[5];
+      8'h04: delay_rdata <= delay_rdata_s[4];
+      8'h03: delay_rdata <= delay_rdata_s[3];
+      8'h02: delay_rdata <= delay_rdata_s[2];
+      8'h01: delay_rdata <= delay_rdata_s[1];
+      8'h00: delay_rdata <= delay_rdata_s[0];
+      default: delay_rdata <= 5'd0;
+    endcase
+    if (delay_sel == 1'b1) begin
+      delay_ack_t <= ~delay_ack_t;
+    end
+  end
+
+  // delay controller
+
+  (* IODELAY_GROUP = PCORE_IODELAY_GROUP *)
+  IDELAYCTRL i_delay_ctrl (
+    .RST (delay_rst),
+    .REFCLK (delay_clk),
+    .RDY (delay_locked));
+
+  // receive data interface, ibuf -> idelay -> iddr
+
   generate
   for (l_inst = 0; l_inst <= 5; l_inst = l_inst + 1) begin: g_rx_data
 
   IBUFDS i_rx_data_ibuf (
     .I (rx_data_in_p[l_inst]),
     .IB (rx_data_in_n[l_inst]),
-    .O (rx_data_ibuf_s[l_inst]));    
-    
+    .O (rx_data_ibuf_s[l_inst]));
+
+  if (PCORE_BUFTYPE == PCORE_VIRTEX6) begin
+  (* IODELAY_GROUP = PCORE_IODELAY_GROUP *)
+  IODELAYE1 #(
+    .CINVCTRL_SEL ("FALSE"),
+    .DELAY_SRC ("I"),
+    .HIGH_PERFORMANCE_MODE ("TRUE"),
+    .IDELAY_TYPE ("VAR_LOADABLE"),
+    .IDELAY_VALUE (0),
+    .ODELAY_TYPE ("FIXED"),
+    .ODELAY_VALUE (0),
+    .REFCLK_FREQUENCY (200.0),
+    .SIGNAL_PATTERN ("DATA"))
+  i_rx_data_idelay (
+    .T (1'b1),
+    .CE (1'b0),
+    .INC (1'b0),
+    .CLKIN (1'b0),
+    .DATAIN (1'b0),
+    .ODATAIN (1'b0),
+    .CINVCTRL (1'b0),
+    .C (delay_clk),
+    .IDATAIN (rx_data_ibuf_s[l_inst]),
+    .DATAOUT (rx_data_idelay_s[l_inst]),
+    .RST (delay_ld[l_inst]),
+    .CNTVALUEIN (delay_wdata),
+    .CNTVALUEOUT (delay_rdata_s[l_inst]));
+  end else begin
+  (* IODELAY_GROUP = PCORE_IODELAY_GROUP *)
+  IDELAYE2 #(
+    .CINVCTRL_SEL ("FALSE"),
+    .DELAY_SRC ("IDATAIN"),
+    .HIGH_PERFORMANCE_MODE ("FALSE"),
+    .IDELAY_TYPE ("VAR_LOAD"),
+    .IDELAY_VALUE (0),
+    .REFCLK_FREQUENCY (200.0),
+    .PIPE_SEL ("FALSE"),
+    .SIGNAL_PATTERN ("DATA"))
+  i_rx_data_idelay (
+    .CE (1'b0),
+    .INC (1'b0),
+    .DATAIN (1'b0),
+    .LDPIPEEN (1'b0),
+    .CINVCTRL (1'b0),
+    .REGRST (1'b0),
+    .C (delay_clk),
+    .IDATAIN (rx_data_ibuf_s[l_inst]),
+    .DATAOUT (rx_data_idelay_s[l_inst]),
+    .LD (delay_ld[l_inst]),
+    .CNTVALUEIN (delay_wdata),
+    .CNTVALUEOUT (delay_rdata_s[l_inst]));
+  end
+
   IDDR #(
     .DDR_CLK_EDGE ("SAME_EDGE_PIPELINED"),
     .INIT_Q1 (1'b0),
@@ -393,17 +518,73 @@ module axi_ad9361_dev_if (
     .R (1'b0),
     .S (1'b0),
     .C (clk),
-    .D (rx_data_ibuf_s[l_inst]),
+    .D (rx_data_idelay_s[l_inst]),
     .Q1 (rx_data_p_s[l_inst]),
     .Q2 (rx_data_n_s[l_inst]));
 
   end
   endgenerate
 
+  // receive frame interface, ibuf -> idelay -> iddr
+
   IBUFDS i_rx_frame_ibuf (
     .I (rx_frame_in_p),
     .IB (rx_frame_in_n),
     .O (rx_frame_ibuf_s));
+
+  generate
+  if (PCORE_BUFTYPE == PCORE_VIRTEX6) begin
+  (* IODELAY_GROUP = PCORE_IODELAY_GROUP *)
+  IODELAYE1 #(
+    .CINVCTRL_SEL ("FALSE"),
+    .DELAY_SRC ("I"),
+    .HIGH_PERFORMANCE_MODE ("TRUE"),
+    .IDELAY_TYPE ("VAR_LOADABLE"),
+    .IDELAY_VALUE (0),
+    .ODELAY_TYPE ("FIXED"),
+    .ODELAY_VALUE (0),
+    .REFCLK_FREQUENCY (200.0),
+    .SIGNAL_PATTERN ("DATA"))
+  i_rx_frame_idelay (
+    .T (1'b1),
+    .CE (1'b0),
+    .INC (1'b0),
+    .CLKIN (1'b0),
+    .DATAIN (1'b0),
+    .ODATAIN (1'b0),
+    .CINVCTRL (1'b0),
+    .C (delay_clk),
+    .IDATAIN (rx_frame_ibuf_s),
+    .DATAOUT (rx_frame_idelay_s),
+    .RST (delay_ld[6]),
+    .CNTVALUEIN (delay_wdata),
+    .CNTVALUEOUT (delay_rdata_s[6]));
+  end else begin
+  (* IODELAY_GROUP = PCORE_IODELAY_GROUP *)
+  IDELAYE2 #(
+    .CINVCTRL_SEL ("FALSE"),
+    .DELAY_SRC ("IDATAIN"),
+    .HIGH_PERFORMANCE_MODE ("FALSE"),
+    .IDELAY_TYPE ("VAR_LOAD"),
+    .IDELAY_VALUE (0),
+    .REFCLK_FREQUENCY (200.0),
+    .PIPE_SEL ("FALSE"),
+    .SIGNAL_PATTERN ("DATA"))
+  i_rx_frame_idelay (
+    .CE (1'b0),
+    .INC (1'b0),
+    .DATAIN (1'b0),
+    .LDPIPEEN (1'b0),
+    .CINVCTRL (1'b0),
+    .REGRST (1'b0),
+    .C (delay_clk),
+    .IDATAIN (rx_frame_ibuf_s),
+    .DATAOUT (rx_frame_idelay_s),
+    .LD (delay_ld[6]),
+    .CNTVALUEIN (delay_wdata),
+    .CNTVALUEOUT (delay_rdata_s[6]));
+  end
+  endgenerate
 
   IDDR #(
     .DDR_CLK_EDGE ("SAME_EDGE_PIPELINED"),
@@ -415,7 +596,7 @@ module axi_ad9361_dev_if (
     .R (1'b0),
     .S (1'b0),
     .C (clk),
-    .D (rx_frame_ibuf_s),
+    .D (rx_frame_idelay_s),
     .Q1 (rx_frame_p_s),
     .Q2 (rx_frame_n_s));
 
@@ -433,7 +614,7 @@ module axi_ad9361_dev_if (
     .R (1'b0),
     .S (1'b0),
     .C (clk),
-    .D1 (tx_data_p[l_inst]), //Is this differential input being translated to single ended?
+    .D1 (tx_data_p[l_inst]),
     .D2 (tx_data_n[l_inst]),
     .Q (tx_data_oddr_s[l_inst]));
 
