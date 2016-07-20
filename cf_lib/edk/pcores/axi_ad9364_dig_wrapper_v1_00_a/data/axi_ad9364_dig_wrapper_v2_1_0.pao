@@ -4,5 +4,7 @@
 ## Date:              Tue Jul 19 10:32:29 2016 (by Create and Import Peripheral Wizard)
 ##############################################################################
 
+lib adi_common_v1_00_a up_axi verilog
 lib axi_ad9364_dig_wrapper_v1_00_a axi_ad9364_dig_wrapper verilog
 lib axi_ad9364_dig_wrapper_v1_00_a axi_ad9364_dig_if verilog
+

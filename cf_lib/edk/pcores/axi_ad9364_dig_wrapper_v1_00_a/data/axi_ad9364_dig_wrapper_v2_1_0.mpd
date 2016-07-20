@@ -36,18 +36,18 @@ PARAMETER qdata2_tx = 0x2df
 PARAMETER C_S_AXI_PROTOCOL = AXI4LITE, TYPE = NON_HDL, ASSIGNMENT = CONSTANT, DT = STRING, BUS = S_AXI
 
 ## Ports
-PORT rx_clk_in_phys_p = "", DIR = I
-PORT rx_clk_in_phys_n = "", DIR = I
-PORT rx_frame_in_phys_p = "", DIR = I
-PORT rx_frame_in_phys_n = "", DIR = I
-PORT rx_data_in_phys_p = "", DIR = I, VEC = [5:0]
-PORT rx_data_in_phys_n = "", DIR = I, VEC = [5:0]
-PORT tx_clk_out_phys_p = "", DIR = O
-PORT tx_clk_out_phys_n = "", DIR = O
-PORT tx_frame_out_phys_p = "", DIR = O
-PORT tx_frame_out_phys_n = "", DIR = O
-PORT tx_data_out_phys_p = "", DIR = O, VEC = [5:0]
-PORT tx_data_out_phys_n = "", DIR = O, VEC = [5:0]
+PORT rx_clk_in_p = "", DIR = I
+PORT rx_clk_in_n = "", DIR = I
+PORT rx_frame_in_p = "", DIR = I
+PORT rx_frame_in_n = "", DIR = I
+PORT rx_data_in_p = "", DIR = I, VEC = [5:0]
+PORT rx_data_in_n = "", DIR = I, VEC = [5:0]
+PORT tx_clk_out_p = "", DIR = O
+PORT tx_clk_out_n = "", DIR = O
+PORT tx_frame_out_p = "", DIR = O
+PORT tx_frame_out_n = "", DIR = O
+PORT tx_data_out_p = "", DIR = O, VEC = [5:0]
+PORT tx_data_out_n = "", DIR = O, VEC = [5:0]
 PORT s_axi_aclk = ACLK, DIR = I, SIGIS = CLK, BUS = S_AXI
 PORT s_axi_aresetn = ARESETN, DIR = I, SIGIS = RST, BUS = S_AXI
 PORT s_axi_awvalid = AWVALID, DIR = I, BUS = S_AXI
@@ -69,5 +69,8 @@ PORT s_axi_rresp = RRESP, DIR = O, VEC = [1:0], BUS = S_AXI
 PORT s_axi_rready = RREADY, DIR = I, BUS = S_AXI
 PORT dev_dbg_trigger = "", DIR = O, VEC = [3:0]
 PORT dev_dbg_data = "", DIR = O, VEC = [297:0]
+
+## Core Interface
+PORT clk = "", DIR = O, SIGIS = CLK
 
 END
