@@ -459,8 +459,8 @@ module axi_ad9361_dev_if (
   if (PCORE_BUFTYPE == PCORE_VIRTEX6) begin
   (* IODELAY_GROUP = PCORE_IODELAY_GROUP *)
   IODELAYE1 #(
-    .CINVCTRL_SEL ("FALSE"),
-    .DELAY_SRC ("I"),
+    .CINVCTRL_SEL ("FALSE"), //don't invert the clock
+    .DELAY_SRC ("I"), //
     .HIGH_PERFORMANCE_MODE ("TRUE"),
     .IDELAY_TYPE ("VAR_LOADABLE"),
     .IDELAY_VALUE (0),
@@ -469,7 +469,7 @@ module axi_ad9361_dev_if (
     .REFCLK_FREQUENCY (200.0),
     .SIGNAL_PATTERN ("DATA"))
   i_rx_data_idelay (
-    .T (1'b1),
+    .T (1'b1), //configure as input or output (not super clear in documentation which)
     .CE (1'b0),
     .INC (1'b0),
     .CLKIN (1'b0),
