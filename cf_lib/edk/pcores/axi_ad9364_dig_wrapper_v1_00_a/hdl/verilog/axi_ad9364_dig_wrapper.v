@@ -150,12 +150,12 @@ module axi_ad9364_dig_wrapper
 
     //tx - what the "HDL" we're plugged into is supposedly transmitting (alternating between 1 and 2)
     //This goes into the "dac_data" and we should result in data going out on "tx_data_out"
-    parameter idata1_tx = 12'o3777; //most positive value
-    parameter idata2_tx = 12'o0000; //zero
-    parameter idata3_tx = 12'o4000; //most negative value
-    parameter qdata1_tx = 12'o3737; //highest guaranteed positive (bottom and top 6 bits)
-    parameter qdata2_tx = 12'o1737; //bit less than half, but still ensured to be positive
-    parameter qdata3_tx = 12'o0000; //zero
+    localparam idata1_tx = 12'o3777; //most positive value
+    localparam idata2_tx = 12'o0000; //zero
+    localparam idata3_tx = 12'o4000; //most negative value
+    localparam qdata1_tx = 12'o3737; //highest guaranteed positive (bottom and top 6 bits)
+    localparam qdata2_tx = 12'o1737; //bit less than half, but still ensured to be positive
+    localparam qdata3_tx = 12'o0000; //zero
 
     //TESTBENCH: For a testbench, uncomment this block!
     /*initial

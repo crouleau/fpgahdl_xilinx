@@ -51,6 +51,9 @@ module axi_ad9364_dig_if (
   rx_frame_in_n,
   rx_data_in_p,
   rx_data_in_n,
+  
+  //delay interface
+  delay_clk,
 
   // physical interface (transmit)
 
@@ -95,7 +98,7 @@ module axi_ad9364_dig_if (
   parameter   PCORE_IODELAY_GROUP = "dev_if_delay_group";
   localparam  PCORE_7SERIES = 0;
   localparam  PCORE_VIRTEX6 = 1;
-  parameter   I_DELAYVALUE = 1; //How many taps do we delay on our input port (200MHz clk)
+  localparam  I_DELAYVALUE = 1; //How many taps do we delay on our input port (200MHz clk)
 
   // physical interface (receive)
 
@@ -105,6 +108,9 @@ module axi_ad9364_dig_if (
   input           rx_frame_in_n;
   input   [ 5:0]  rx_data_in_p;
   input   [ 5:0]  rx_data_in_n;
+  
+  //delay interface
+  input           delay_clk;
 
   // physical interface (transmit)
 
@@ -181,6 +187,7 @@ module axi_ad9364_dig_if (
   wire    [ 3:0]  rx_frame_s;
   wire    [ 3:0]  tx_data_sel_s;
   wire    [ 5:0]  rx_data_ibuf_s;
+  wire    [ 5:0]  rx_data_idelay_s;
   wire    [ 5:0]  rx_data_p_s;
   wire    [ 5:0]  rx_data_n_s;
   wire            rx_frame_ibuf_s;
@@ -422,7 +429,8 @@ module axi_ad9364_dig_if (
     .DATAOUT (rx_data_idelay_s[l_inst]),
     .RST ('d0),
     .CNTVALUEIN ('d0),
-    .CNTVALUEOUT ( );
+    .CNTVALUEOUT ( )
+  );
 
   IDDR #(
     .DDR_CLK_EDGE ("SAME_EDGE_PIPELINED"),
@@ -436,7 +444,9 @@ module axi_ad9364_dig_if (
     .C (clk),
     .D (rx_data_idelay_s[l_inst]),
     .Q1 (rx_data_p_s[l_inst]),
-    .Q2 (rx_data_n_s[l_inst]));
+    .Q2 (rx_data_n_s[l_inst])
+  );
+  end
   endgenerate
 
 
@@ -472,7 +482,7 @@ module axi_ad9364_dig_if (
         .DATAOUT (rx_frame_idelay_s),
         .RST ('d0),
         .CNTVALUEIN ('d0),
-        .CNTVALUEOUT ( );
+        .CNTVALUEOUT ( )
     );
 
     endgenerate
@@ -489,7 +499,8 @@ module axi_ad9364_dig_if (
     .C (clk),
     .D (rx_frame_idelay_s),
     .Q1 (rx_frame_p_s),
-    .Q2 (rx_frame_n_s));
+    .Q2 (rx_frame_n_s)
+  );
 
   // transmit data interface, oddr -> obuf
 
