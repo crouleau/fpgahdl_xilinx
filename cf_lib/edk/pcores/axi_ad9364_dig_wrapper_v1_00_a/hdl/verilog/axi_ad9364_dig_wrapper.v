@@ -12,6 +12,9 @@ module axi_ad9364_dig_wrapper
         rx_data_in_p,
         rx_data_in_n,
 
+        // delay clock (200MHz)
+        delay_clk,
+
         // physical interface (Tx - going out to the AD9364)
         tx_clk_out_p,
         tx_clk_out_n,
@@ -19,7 +22,7 @@ module axi_ad9364_dig_wrapper
         tx_frame_out_n,
         tx_data_out_p,
         tx_data_out_n,
-        
+
         //clk output (currently only used for chipscope)
         clk,
 
@@ -74,6 +77,9 @@ module axi_ad9364_dig_wrapper
     input   [ 5:0]  rx_data_in_p;
     input   [ 5:0]  rx_data_in_n;
 
+    // delay clock (200MHz)
+    input           delay_clk;
+
     // physical interface (Tx - receive from module)
 
     output          tx_clk_out_p;
@@ -103,7 +109,7 @@ module axi_ad9364_dig_wrapper
     output  [31:0]  s_axi_rdata;
     output  [ 1:0]  s_axi_rresp;
     input           s_axi_rready;
-    
+
     //AXI supplementary stuff (NOT USED)
     reg             up_ack = 'd0;
     wire         up_sel_s;
@@ -135,7 +141,7 @@ module axi_ad9364_dig_wrapper
     reg [11:0]    dac_data_i2_gen = 'd0;
     reg [11:0]    dac_data_q2_gen = 'd0;
     reg           dac_r1_mode_gen = 1'b1; //1 rx, 1 tx mode
-    reg [1:0]     dac_data_sel = 'd0;
+    reg [2:0]     dac_data_sel = 'd0;
 
     // chipscope signals
     output  [ 3:0]  dev_dbg_trigger;
@@ -144,10 +150,12 @@ module axi_ad9364_dig_wrapper
 
     //tx - what the "HDL" we're plugged into is supposedly transmitting (alternating between 1 and 2)
     //This goes into the "dac_data" and we should result in data going out on "tx_data_out"
-    parameter idata1_tx = 12'o2064;
-    parameter idata2_tx = 12'o4402;
-    parameter qdata1_tx = 12'o1753;
-    parameter qdata2_tx = 12'o1337;
+    parameter idata1_tx = 12'o3777; //most positive value
+    parameter idata2_tx = 12'o0000; //zero
+    parameter idata3_tx = 12'o4000; //most negative value
+    parameter qdata1_tx = 12'o3737; //highest guaranteed positive (bottom and top 6 bits)
+    parameter qdata2_tx = 12'o1737; //bit less than half, but still ensured to be positive
+    parameter qdata3_tx = 12'o0000; //zero
 
     //TESTBENCH: For a testbench, uncomment this block!
     /*initial
@@ -160,36 +168,47 @@ module axi_ad9364_dig_wrapper
             rx_clk_in_p = ~rx_clk_in_p;
             rx_clk_in_n = ~rx_clk_in_n;
         end
-    end*/    
+    end*/
 
     always @(posedge clk) begin
         case(dac_data_sel)
-            2'b00: begin
+            3'b000: begin
                 //On even clock edges, prep the data so that it can be read in
                 dac_data_sel <= dac_data_sel + 1'b1;
                 dac_valid <= 1'b1;
                 dac_data_i1_gen <= idata1_tx;
                 dac_data_q1_gen <= qdata1_tx;
             end
-            2'b01: begin
+            3'b001: begin
                 //On odd clock edges, just set DAC valid false - the core is busy
                 //clocking out the previous data we gave it
                 dac_valid <= 1'b0;
                 dac_data_sel <= dac_data_sel + 1'b1;
             end
-            2'b10: begin
+            3'b010: begin
                 //Now clock in the second set of alternating data
                 dac_data_sel <= dac_data_sel + 1'b1;
                 dac_valid <= 1'b1;
                 dac_data_i1_gen <= idata2_tx;
                 dac_data_q1_gen <= qdata2_tx;
             end
-            2'b11: begin
+            3'b011: begin
                 dac_valid <= 1'b0;
                 dac_data_sel <= dac_data_sel + 1'b1;
             end
+            3'b100: begin
+                //Now clock in the third set of data
+                dac_data_sel <= dac_data_sel + 1'b1;
+                dac_valid <= 1'b1;
+                dac_data_i1_gen <= idata3_tx;
+                dac_data_q1_gen <= qdata3_tx;
+            end
+            3'b101: begin
+                dac_valid <= 1'b0;
+                dac_data_sel <= 3'b000; //back to the beginning
+            end
             default: begin
-                dac_data_sel <= 2'b00; //Shouldn't get here, but just for safety I suppose
+                dac_data_sel <= 3'b000; //Shouldn't get here, but just for safety I suppose
             end
         endcase
     end
@@ -204,6 +223,7 @@ module axi_ad9364_dig_wrapper
         .rx_frame_in_n (rx_frame_in_n),
         .rx_data_in_p (rx_data_in_p),
         .rx_data_in_n (rx_data_in_n),
+        .delay_clk (delay_clk),
         .tx_clk_out_p (tx_clk_out_p),
         .tx_clk_out_n (tx_clk_out_n),
         .tx_frame_out_p (tx_frame_out_p),

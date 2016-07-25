@@ -92,8 +92,10 @@ module axi_ad9364_dig_if (
   // this parameter controls the buffer type based on the target device.
 
   parameter   PCORE_BUFTYPE = 1; //Using Virtex 6!
+  parameter   PCORE_IODELAY_GROUP = "dev_if_delay_group";
   localparam  PCORE_7SERIES = 0;
   localparam  PCORE_VIRTEX6 = 1;
+  parameter   I_DELAYVALUE = 1; //How many taps do we delay on our input port (200MHz clk)
 
   // physical interface (receive)
 
@@ -182,6 +184,7 @@ module axi_ad9364_dig_if (
   wire    [ 5:0]  rx_data_p_s;
   wire    [ 5:0]  rx_data_n_s;
   wire            rx_frame_ibuf_s;
+  wire            rx_frame_idelay_s;
   wire            rx_frame_p_s;
   wire            rx_frame_n_s;
   wire    [ 5:0]  tx_data_oddr_s;
@@ -239,8 +242,11 @@ module axi_ad9364_dig_if (
   assign dev_dbg_data[249:249] = adc_valid;
   assign dev_dbg_data[261:250] = adc_data_i1;
   assign dev_dbg_data[273:262] = adc_data_q1;
-  assign dev_dbg_data[285:274] = adc_data_i2;
-  assign dev_dbg_data[297:286] = adc_data_q2;
+  assign dev_dbg_data[274:274] = rx_frame_ibuf_s; //non-delayed signal
+  assign dev_dbg_data[280:275] = rx_data_ibuf_s; //non-delayed signal
+  assign dev_dbg_data[281:281] = clk; //not sure if this will work as I want it
+  assign dev_dbg_data[282:282] = delay_clk; //also not sure how this will work
+  assign dev_dbg_data[297:283] = 'd0; //unused
 
   // receive data path interface
 
@@ -268,7 +274,7 @@ module axi_ad9364_dig_if (
   end
 
   // receive data path for dual rf, frame is expected to qualify i/q msb and lsb for rf-1 only
-  // The frame is longer for dual mode - it has to clock in twice as much stuff. It aligns in the 0000 and 1111 case. 
+  // The frame is longer for dual mode - it has to clock in twice as much stuff. It aligns in the 0000 and 1111 case.
   // We know we're aligned as long as the first two and last two bits are the same (we're clocking in at falling and rising edge of the clock)
   always @(posedge clk) begin
     rx_error_r2 <= ((rx_frame_s == 4'b1111) || (rx_frame_s == 4'b1100) ||
@@ -276,7 +282,7 @@ module axi_ad9364_dig_if (
     rx_valid_r2 <= (rx_frame_s == 4'b0000) ? 1'b1 : 1'b0;
     if (rx_frame_s == 4'b1111) begin
       // Channel 1 gets clocked in on a positive frame. I 11:6, Q 11:6, then I 5:0, Q 5:0
-      rx_data_i1_r2 <= {rx_data_d[11:6], rx_data[11:6]}; 
+      rx_data_i1_r2 <= {rx_data_d[11:6], rx_data[11:6]};
       rx_data_q1_r2 <= {rx_data_d[ 5:0], rx_data[ 5:0]};
     end
     if (rx_frame_s == 4'b0000) begin
@@ -375,14 +381,49 @@ module axi_ad9364_dig_if (
     endcase
   end
 
+  // delay controller
+
+  (* IODELAY_GROUP = PCORE_IODELAY_GROUP *)
+  IDELAYCTRL i_delay_ctrl (
+    .RST ('d0),
+    .REFCLK (delay_clk),
+    .RDY ()
+  );
+
   generate
   for (l_inst = 0; l_inst <= 5; l_inst = l_inst + 1) begin: g_rx_data
 
   IBUFDS i_rx_data_ibuf (
     .I (rx_data_in_p[l_inst]),
     .IB (rx_data_in_n[l_inst]),
-    .O (rx_data_ibuf_s[l_inst]));    
-    
+    .O (rx_data_ibuf_s[l_inst]));
+
+(* IODELAY_GROUP = PCORE_IODELAY_GROUP *)
+  IODELAYE1 #(
+    .CINVCTRL_SEL ("FALSE"), //don't invert the clock
+    .DELAY_SRC ("I"), //
+    .HIGH_PERFORMANCE_MODE ("TRUE"),
+    .IDELAY_TYPE ("FIXED"),
+    .IDELAY_VALUE (I_DELAYVALUE), //3 is a shot in the dark...
+    .ODELAY_TYPE ("FIXED"),
+    .ODELAY_VALUE (0),
+    .REFCLK_FREQUENCY (200.0),
+    .SIGNAL_PATTERN ("DATA")) //We expect data to flow through this element, so optimize for it
+  i_rx_data_idelay (
+    .T (1'b1), //configure as input or output (not super clear in documentation which)
+    .CE (1'b0),
+    .INC (1'b0),
+    .CLKIN (1'b0),
+    .DATAIN (1'b0),
+    .ODATAIN (1'b0),
+    .CINVCTRL (1'b0),
+    .C (delay_clk),
+    .IDATAIN (rx_data_ibuf_s[l_inst]),
+    .DATAOUT (rx_data_idelay_s[l_inst]),
+    .RST ('d0),
+    .CNTVALUEIN ('d0),
+    .CNTVALUEOUT ( );
+
   IDDR #(
     .DDR_CLK_EDGE ("SAME_EDGE_PIPELINED"),
     .INIT_Q1 (1'b0),
@@ -393,17 +434,48 @@ module axi_ad9364_dig_if (
     .R (1'b0),
     .S (1'b0),
     .C (clk),
-    .D (rx_data_ibuf_s[l_inst]),
+    .D (rx_data_idelay_s[l_inst]),
     .Q1 (rx_data_p_s[l_inst]),
     .Q2 (rx_data_n_s[l_inst]));
-
-  end
   endgenerate
+
+
+  //FRAME Receive interface
 
   IBUFDS i_rx_frame_ibuf (
     .I (rx_frame_in_p),
     .IB (rx_frame_in_n),
     .O (rx_frame_ibuf_s));
+
+  generate
+    (* IODELAY_GROUP = PCORE_IODELAY_GROUP *)
+    IODELAYE1 #(
+        .CINVCTRL_SEL ("FALSE"),
+        .DELAY_SRC ("I"),
+        .HIGH_PERFORMANCE_MODE ("TRUE"),
+        .IDELAY_TYPE ("FIXED"),
+        .IDELAY_VALUE (I_DELAYVALUE),
+        .ODELAY_TYPE ("FIXED"),
+        .ODELAY_VALUE (0),
+        .REFCLK_FREQUENCY (200.0),
+        .SIGNAL_PATTERN ("DATA"))
+    i_rx_frame_idelay (
+        .T (1'b1),
+        .CE (1'b0),
+        .INC (1'b0),
+        .CLKIN (1'b0),
+        .DATAIN (1'b0),
+        .ODATAIN (1'b0),
+        .CINVCTRL (1'b0),
+        .C (delay_clk),
+        .IDATAIN (rx_frame_ibuf_s),
+        .DATAOUT (rx_frame_idelay_s),
+        .RST ('d0),
+        .CNTVALUEIN ('d0),
+        .CNTVALUEOUT ( );
+    );
+
+    endgenerate
 
   IDDR #(
     .DDR_CLK_EDGE ("SAME_EDGE_PIPELINED"),
@@ -415,7 +487,7 @@ module axi_ad9364_dig_if (
     .R (1'b0),
     .S (1'b0),
     .C (clk),
-    .D (rx_frame_ibuf_s),
+    .D (rx_frame_idelay_s),
     .Q1 (rx_frame_p_s),
     .Q2 (rx_frame_n_s));
 
