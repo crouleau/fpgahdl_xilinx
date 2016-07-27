@@ -98,7 +98,7 @@ module axi_ad9364_dig_if (
   parameter   PCORE_IODELAY_GROUP = "dev_if_delay_group";
   localparam  PCORE_7SERIES = 0;
   localparam  PCORE_VIRTEX6 = 1;
-  localparam  I_DELAYVALUE = 1; //How many taps do we delay on our input port (200MHz clk)
+  localparam  I_DELAYVALUE = 0; //How many taps do we delay on our input port (200MHz clk)
 
   // physical interface (receive)
 
