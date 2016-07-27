@@ -142,20 +142,25 @@ module axi_ad9364_dig_wrapper
     reg [11:0]    dac_data_q2_gen = 'd0;
     reg           dac_r1_mode_gen = 1'b1; //1 rx, 1 tx mode
     reg [2:0]     dac_data_sel = 'd0;
+    reg           dac_busy_flag = 1'b0;
+    reg [11:0]    idata_tx = 'd0; //the data we're currently transmitting over I
+    reg [11:0]    qdata_tx = 'd0; //what we're transmitting over Q
 
     // chipscope signals
     output  [ 3:0]  dev_dbg_trigger;
     output [297:0]  dev_dbg_data;
 
+    //internal data clock
+    wire clk_data;
+    reg[5:0] counter_clk_data_div = 'd0;
+
 
     //tx - what the "HDL" we're plugged into is supposedly transmitting (alternating between 1 and 2)
-    //This goes into the "dac_data" and we should result in data going out on "tx_data_out"
-    parameter idata1_tx = 12'o3777; //most positive value
-    parameter idata2_tx = 12'o0000; //zero
-    parameter idata3_tx = 12'o4000; //most negative value
-    parameter qdata1_tx = 12'o3737; //highest guaranteed positive (bottom and top 6 bits)
-    parameter qdata2_tx = 12'o1737; //bit less than half, but still ensured to be positive
-    parameter qdata3_tx = 12'o0000; //zero
+    //This goes into the idata_tx and qdata_tx registers at the proper times to be transmitted via the dac
+    localparam idata_tx_mux1 = 12'o3777; //most positive value
+    localparam idata_tx_mux2 = 12'o4000; //zero
+    localparam qdata_tx_mux1 = 12'o3777; //most positive value
+    localparam qdata_tx_mux2 = 12'o3777; //keep it in the upper quadrant at all times
 
     //TESTBENCH: For a testbench, uncomment this block!
     /*initial
@@ -170,47 +175,49 @@ module axi_ad9364_dig_wrapper
         end
     end*/
 
-    always @(posedge clk) begin
+    //generate data clock (we know delay_clk is 200MHz, so it's a good way to ensure we know what we get
+    always @(posedge delay_clk) begin
+        if(counter_clk_data_div == 6'b111111) begin
+            counter_clk_data_div <= 6'b000000;
+        end else begin
+            counter_clk_data_div <= counter_clk_data_div + 1'b1;
+        end
+    end
+    assign clk_data = counter_clk_data_div[5]; //divides by 64, giving us 3.125MHz (slow enough for the 18MHz AD9364 bandwidth, as configured)
+
+    //sequence in the muxed available data as needed
+    always @(posedge clk_data) begin
         case(dac_data_sel)
             3'b000: begin
-                //On even clock edges, prep the data so that it can be read in
+                idata_tx <= idata_tx_mux1;
+                qdata_tx <= qdata_tx_mux1;
                 dac_data_sel <= dac_data_sel + 1'b1;
-                dac_valid <= 1'b1;
-                dac_data_i1_gen <= idata1_tx;
-                dac_data_q1_gen <= qdata1_tx;
             end
             3'b001: begin
-                //On odd clock edges, just set DAC valid false - the core is busy
-                //clocking out the previous data we gave it
-                dac_valid <= 1'b0;
-                dac_data_sel <= dac_data_sel + 1'b1;
-            end
-            3'b010: begin
-                //Now clock in the second set of alternating data
-                dac_data_sel <= dac_data_sel + 1'b1;
-                dac_valid <= 1'b1;
-                dac_data_i1_gen <= idata2_tx;
-                dac_data_q1_gen <= qdata2_tx;
-            end
-            3'b011: begin
-                dac_valid <= 1'b0;
-                dac_data_sel <= dac_data_sel + 1'b1;
-            end
-            3'b100: begin
-                //Now clock in the third set of data
-                dac_data_sel <= dac_data_sel + 1'b1;
-                dac_valid <= 1'b1;
-                dac_data_i1_gen <= idata3_tx;
-                dac_data_q1_gen <= qdata3_tx;
-            end
-            3'b101: begin
-                dac_valid <= 1'b0;
-                dac_data_sel <= 3'b000; //back to the beginning
+                idata_tx <= idata_tx_mux2;
+                qdata_tx <= qdata_tx_mux2;
+                dac_data_sel < 3'b000; //can extend this easily, but for now just do a square wave at 3.125MHz
             end
             default: begin
                 dac_data_sel <= 3'b000; //Shouldn't get here, but just for safety I suppose
             end
         endcase
+    end
+
+    //Handle the dac_valid signal properly, and read in our data buffer each clock cycle
+    always @(posedge clk) begin
+        if(dac_busy_flag == 1'b0) begin
+            //On even clock edges, prep the data so that it can be read in
+            dac_valid <= 1'b1;
+            dac_data_i1_gen <= idata_tx;
+            dac_data_q1_gen <= qdata_tx;
+            dac_busy_flag = 1'b1;
+        end else begin
+            //On odd clock edges, just set DAC valid false - the core is busy
+            //clocking out the previous data we gave it
+            dac_valid <= 1'b0;
+            dac_busy_flag <= 1'b0; //won't be busy on next clock edge
+        end
     end
 
     //Digital interface

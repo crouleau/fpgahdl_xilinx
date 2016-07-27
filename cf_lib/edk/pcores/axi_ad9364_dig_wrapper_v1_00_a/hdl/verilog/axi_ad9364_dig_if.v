@@ -383,12 +383,13 @@ module axi_ad9364_dig_if (
 
   // delay controller
 
+  /*
   (* IODELAY_GROUP = PCORE_IODELAY_GROUP *)
   IDELAYCTRL i_delay_ctrl (
     .RST ('d0),
     .REFCLK (delay_clk),
     .RDY ()
-  );
+  );*/
 
   generate
   for (l_inst = 0; l_inst <= 5; l_inst = l_inst + 1) begin: g_rx_data
@@ -398,6 +399,7 @@ module axi_ad9364_dig_if (
     .IB (rx_data_in_n[l_inst]),
     .O (rx_data_ibuf_s[l_inst]));
 
+    /*
 (* IODELAY_GROUP = PCORE_IODELAY_GROUP *)
   IODELAYE1 #(
     .CINVCTRL_SEL ("FALSE"), //don't invert the clock
@@ -423,6 +425,7 @@ module axi_ad9364_dig_if (
     .RST ('d0),
     .CNTVALUEIN ('d0),
     .CNTVALUEOUT ( );
+    */
 
   IDDR #(
     .DDR_CLK_EDGE ("SAME_EDGE_PIPELINED"),
@@ -434,7 +437,7 @@ module axi_ad9364_dig_if (
     .R (1'b0),
     .S (1'b0),
     .C (clk),
-    .D (rx_data_idelay_s[l_inst]),
+    .D (rx_data_ibuf_s[l_inst]),
     .Q1 (rx_data_p_s[l_inst]),
     .Q2 (rx_data_n_s[l_inst]));
   endgenerate
@@ -447,35 +450,34 @@ module axi_ad9364_dig_if (
     .IB (rx_frame_in_n),
     .O (rx_frame_ibuf_s));
 
-  generate
-    (* IODELAY_GROUP = PCORE_IODELAY_GROUP *)
-    IODELAYE1 #(
-        .CINVCTRL_SEL ("FALSE"),
-        .DELAY_SRC ("I"),
-        .HIGH_PERFORMANCE_MODE ("TRUE"),
-        .IDELAY_TYPE ("FIXED"),
-        .IDELAY_VALUE (I_DELAYVALUE),
-        .ODELAY_TYPE ("FIXED"),
-        .ODELAY_VALUE (0),
-        .REFCLK_FREQUENCY (200.0),
-        .SIGNAL_PATTERN ("DATA"))
-    i_rx_frame_idelay (
-        .T (1'b1),
-        .CE (1'b0),
-        .INC (1'b0),
-        .CLKIN (1'b0),
-        .DATAIN (1'b0),
-        .ODATAIN (1'b0),
-        .CINVCTRL (1'b0),
-        .C (delay_clk),
-        .IDATAIN (rx_frame_ibuf_s),
-        .DATAOUT (rx_frame_idelay_s),
-        .RST ('d0),
-        .CNTVALUEIN ('d0),
-        .CNTVALUEOUT ( );
-    );
-
-    endgenerate
+    /*generate
+        (* IODELAY_GROUP = PCORE_IODELAY_GROUP *)
+        IODELAYE1 #(
+            .CINVCTRL_SEL ("FALSE"),
+            .DELAY_SRC ("I"),
+            .HIGH_PERFORMANCE_MODE ("TRUE"),
+            .IDELAY_TYPE ("FIXED"),
+            .IDELAY_VALUE (I_DELAYVALUE),
+            .ODELAY_TYPE ("FIXED"),
+            .ODELAY_VALUE (0),
+            .REFCLK_FREQUENCY (200.0),
+            .SIGNAL_PATTERN ("DATA"))
+        i_rx_frame_idelay (
+            .T (1'b1),
+            .CE (1'b0),
+            .INC (1'b0),
+            .CLKIN (1'b0),
+            .DATAIN (1'b0),
+            .ODATAIN (1'b0),
+            .CINVCTRL (1'b0),
+            .C (delay_clk),
+            .IDATAIN (rx_frame_ibuf_s),
+            .DATAOUT (rx_frame_idelay_s),
+            .RST ('d0),
+            .CNTVALUEIN ('d0),
+            .CNTVALUEOUT ( );
+        );
+    endgenerate*/
 
   IDDR #(
     .DDR_CLK_EDGE ("SAME_EDGE_PIPELINED"),
@@ -487,7 +489,7 @@ module axi_ad9364_dig_if (
     .R (1'b0),
     .S (1'b0),
     .C (clk),
-    .D (rx_frame_idelay_s),
+    .D (rx_frame_ibuf_s),
     .Q1 (rx_frame_p_s),
     .Q2 (rx_frame_n_s));
 
