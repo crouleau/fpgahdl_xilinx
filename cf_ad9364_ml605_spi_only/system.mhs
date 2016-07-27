@@ -348,6 +348,7 @@ BEGIN axi_ad9364_dig_wrapper
 # PORT enable = axi_ad9364_dig_wrapper_0_enable
 # PORT txnrx = axi_ad9364_dig_wrapper_0_txnrx
  PORT clk = dev_clk
+ PORT delay_clk = clk_200_0000MHzMMCM0
 # PORT s_axis_s2mm_clk = clk_200_0000MHzMMCM0
 # PORT m_axis_mm2s_fsync = axi_ad9364_dig_wrapper_0_vdma_fs
 # PORT m_axis_mm2s_clk = clk_200_0000MHzMMCM0
