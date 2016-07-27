@@ -51,7 +51,7 @@ module axi_ad9364_dig_if (
   rx_frame_in_n,
   rx_data_in_p,
   rx_data_in_n,
-  
+
   //delay interface
   delay_clk,
 
@@ -108,7 +108,7 @@ module axi_ad9364_dig_if (
   input           rx_frame_in_n;
   input   [ 5:0]  rx_data_in_p;
   input   [ 5:0]  rx_data_in_n;
-  
+
   //delay interface
   input           delay_clk;
 
@@ -390,12 +390,13 @@ module axi_ad9364_dig_if (
 
   // delay controller
 
+  /*
   (* IODELAY_GROUP = PCORE_IODELAY_GROUP *)
   IDELAYCTRL i_delay_ctrl (
     .RST ('d0),
     .REFCLK (delay_clk),
     .RDY ()
-  );
+  );*/
 
   generate
   for (l_inst = 0; l_inst <= 5; l_inst = l_inst + 1) begin: g_rx_data
@@ -405,6 +406,7 @@ module axi_ad9364_dig_if (
     .IB (rx_data_in_n[l_inst]),
     .O (rx_data_ibuf_s[l_inst]));
 
+    /*
 (* IODELAY_GROUP = PCORE_IODELAY_GROUP *)
   IODELAYE1 #(
     .CINVCTRL_SEL ("FALSE"), //don't invert the clock
@@ -430,7 +432,7 @@ module axi_ad9364_dig_if (
     .RST ('d0),
     .CNTVALUEIN ('d0),
     .CNTVALUEOUT ( )
-  );
+  );*/
 
   IDDR #(
     .DDR_CLK_EDGE ("SAME_EDGE_PIPELINED"),
@@ -442,7 +444,7 @@ module axi_ad9364_dig_if (
     .R (1'b0),
     .S (1'b0),
     .C (clk),
-    .D (rx_data_idelay_s[l_inst]),
+    .D (rx_data_ibuf_s[l_inst]),
     .Q1 (rx_data_p_s[l_inst]),
     .Q2 (rx_data_n_s[l_inst])
   );
@@ -457,6 +459,7 @@ module axi_ad9364_dig_if (
     .IB (rx_frame_in_n),
     .O (rx_frame_ibuf_s));
 
+/*
   generate
     (* IODELAY_GROUP = PCORE_IODELAY_GROUP *)
     IODELAYE1 #(
@@ -486,6 +489,7 @@ module axi_ad9364_dig_if (
     );
 
     endgenerate
+*/
 
   IDDR #(
     .DDR_CLK_EDGE ("SAME_EDGE_PIPELINED"),
@@ -497,7 +501,7 @@ module axi_ad9364_dig_if (
     .R (1'b0),
     .S (1'b0),
     .C (clk),
-    .D (rx_frame_idelay_s),
+    .D (rx_frame_ibuf_s),
     .Q1 (rx_frame_p_s),
     .Q2 (rx_frame_n_s)
   );
