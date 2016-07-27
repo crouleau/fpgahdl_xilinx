@@ -110,9 +110,6 @@
   <text x="60" y="150" fill="#000000" stroke="none" font-size="8pt" font-style="normal" font-weight="bold" text-anchor="middle" font-family="Verdana Arial Helvetica san-serif">5</text>
   <use xmlns:xlink="http://www.w3.org/1999/xlink" x="40" y="168" xlink:href="#IPD_SPort"/>
   <text x="60" y="174" fill="#000000" stroke="none" font-size="8pt" font-style="normal" font-weight="bold" text-anchor="middle" font-family="Verdana Arial Helvetica san-serif">6</text>
-  <use xmlns:xlink="http://www.w3.org/1999/xlink" x="40" y="192" xlink:href="#IPD_SPort"/>
-  <use xmlns:xlink="http://www.w3.org/1999/xlink" x="48" y="190" xlink:href="#IPD_PortClk"/>
-  <text x="60" y="198" fill="#000000" stroke="none" font-size="8pt" font-style="normal" font-weight="bold" text-anchor="middle" font-family="Verdana Arial Helvetica san-serif">14</text>
   <use xmlns:xlink="http://www.w3.org/1999/xlink" x="228" y="24" xlink:href="#IPD_SPort"/>
   <text x="216" y="30" fill="#000000" stroke="none" font-size="8pt" font-style="normal" font-weight="bold" text-anchor="middle" font-family="Verdana Arial Helvetica san-serif">7</text>
   <use xmlns:xlink="http://www.w3.org/1999/xlink" x="228" y="48" xlink:href="#IPD_SPort"/>
@@ -128,9 +125,9 @@
   <use xmlns:xlink="http://www.w3.org/1999/xlink" x="228" y="168" xlink:href="#IPD_SPort"/>
   <text x="216" y="174" fill="#000000" stroke="none" font-size="8pt" font-style="normal" font-weight="bold" text-anchor="middle" font-family="Verdana Arial Helvetica san-serif">13</text>
   <use xmlns:xlink="http://www.w3.org/1999/xlink" x="228" y="192" xlink:href="#IPD_SPort"/>
-  <text x="216" y="198" fill="#000000" stroke="none" font-size="8pt" font-style="normal" font-weight="bold" text-anchor="middle" font-family="Verdana Arial Helvetica san-serif">15</text>
+  <text x="216" y="198" fill="#000000" stroke="none" font-size="8pt" font-style="normal" font-weight="bold" text-anchor="middle" font-family="Verdana Arial Helvetica san-serif">14</text>
   <use xmlns:xlink="http://www.w3.org/1999/xlink" x="228" y="216" xlink:href="#IPD_SPort"/>
-  <text x="216" y="222" fill="#000000" stroke="none" font-size="8pt" font-style="normal" font-weight="bold" text-anchor="middle" font-family="Verdana Arial Helvetica san-serif">16</text>
+  <text x="216" y="222" fill="#000000" stroke="none" font-size="8pt" font-style="normal" font-weight="bold" text-anchor="middle" font-family="Verdana Arial Helvetica san-serif">15</text>
   <use xmlns:xlink="http://www.w3.org/1999/xlink" x="24" y="248" xlink:href="#AXI_busconn_SLAVE"/>
   <text x="60" y="262" fill="#000000" stroke="none" font-size="8pt" font-style="normal" font-weight="bold" font-family="Verdana Arial Helvetica san-serif">S_AXI</text>
 </svg>

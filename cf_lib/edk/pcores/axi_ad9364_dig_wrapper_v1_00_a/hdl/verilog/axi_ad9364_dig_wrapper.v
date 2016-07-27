@@ -196,7 +196,7 @@ module axi_ad9364_dig_wrapper
             3'b001: begin
                 idata_tx <= idata_tx_mux2;
                 qdata_tx <= qdata_tx_mux2;
-                dac_data_sel < 3'b000; //can extend this easily, but for now just do a square wave at 3.125MHz
+                dac_data_sel <= 3'b000; //can extend this easily, but for now just do a square wave at 3.125MHz
             end
             default: begin
                 dac_data_sel <= 3'b000; //Shouldn't get here, but just for safety I suppose
@@ -211,7 +211,7 @@ module axi_ad9364_dig_wrapper
             dac_valid <= 1'b1;
             dac_data_i1_gen <= idata_tx;
             dac_data_q1_gen <= qdata_tx;
-            dac_busy_flag = 1'b1;
+            dac_busy_flag <= 1'b1;
         end else begin
             //On odd clock edges, just set DAC valid false - the core is busy
             //clocking out the previous data we gave it
