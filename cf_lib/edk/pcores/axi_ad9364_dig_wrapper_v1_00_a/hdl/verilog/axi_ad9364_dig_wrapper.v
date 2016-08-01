@@ -158,9 +158,9 @@ module axi_ad9364_dig_wrapper
     //tx - what the "HDL" we're plugged into is supposedly transmitting (alternating between 1 and 2)
     //This goes into the idata_tx and qdata_tx registers at the proper times to be transmitted via the dac
     localparam idata_tx_mux1 = 12'o3777; //most positive value
-    localparam idata_tx_mux2 = 12'o4000; //zero
-    localparam qdata_tx_mux1 = 12'o3777; //most positive value
-    localparam qdata_tx_mux2 = 12'o3777; //keep it in the upper quadrant at all times
+    localparam idata_tx_mux2 = 12'o4000; //most negative
+    localparam qdata_tx_mux1 = 12'o0000; //keep Q out of it for now
+    localparam qdata_tx_mux2 = 12'o0000; //zeros
 
     //TESTBENCH: For a testbench, uncomment this block!
     /*initial

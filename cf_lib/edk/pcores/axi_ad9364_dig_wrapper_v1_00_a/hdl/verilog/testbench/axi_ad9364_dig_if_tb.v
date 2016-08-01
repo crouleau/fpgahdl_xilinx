@@ -19,6 +19,7 @@ module axi_ad9364_dig_if_tb
     // physical interface (Rx - input to module)
 
     //Data clock - maxes out at 247.76MHz for LVDS, seems to be set automatically.
+    //Default code configuration is 61.44MHz
     //  See "DATA_CLK" in documentation
     // Note that we are using LVDS mode by default in the driver
     // DATA_CLK = 2 x RX_SAMPL_FREQ (see code) for the AD9364 using LVDS (there are options if using the AD9361)
